@@ -149,4 +149,35 @@ public class ScreenshotController {
             return ResponseEntity.status(500).body("modifying " + filename + " to " + newFilename + " error occurred");
         }
     }
+
+    // 1개 이상의 파일 삭제
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteScreenshot(
+            @RequestParam("email") String email,
+            @RequestParam("fileList") List<String> fileList) {
+        if (fileList == null || fileList.isEmpty()) {
+            return ResponseEntity.badRequest().body("fileList invalid");
+        }
+
+        for (String filename : fileList) {
+            if (filename == null || filename.isEmpty()) {
+                return ResponseEntity.badRequest().body("filename invalid");
+            }
+
+            File deleteFile = new File(UPLOAD_DIR + filename);
+            if (!deleteFile.exists()) {
+                return ResponseEntity.badRequest().body(filename + " doesn't exist");
+            }
+
+            try {
+                if (!deleteFile.delete()) {
+                    return ResponseEntity.status(500).body("deleting " + filename + " failed");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(500).body("deleting " + filename + " error occurred");
+            }
+        }
+        return ResponseEntity.ok("delete successful");
+    }
 }
