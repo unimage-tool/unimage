@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/screenshot")
 public class ScreenshotController {
