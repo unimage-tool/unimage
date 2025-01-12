@@ -52,4 +52,65 @@ public class ScreenshotController {
             return ResponseEntity.status(500).body("Uploading screenshot error occurred");
         }
     }
+
+    // 사용자의 모든 스크린샷 날짜순 조회 및 경로 전달하여 다운로드 가능
+    @GetMapping("/all")
+    public ResponseEntity<List<ScreenshotDto>> getAllScreenshots(
+            @RequestParam("email") String email) {
+        File uploadDir = new File(UPLOAD_DIR);
+        File[] files = uploadDir.listFiles();
+
+        if (files == null || files.length == 0) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<ScreenshotDto> screenshotList = Arrays.stream(files)
+                .filter(File::isFile)
+                .map(file -> new ScreenshotDto(
+                        "fileName",
+                        "C:/Server/Unimage~~",
+                        "2024-09-23"
+                        // fileName, 생성시 저장한 파일 명
+                        // filePath, 생성시 저장해놓은 경로
+                        // date , 생성 날짜 연,월,일
+                ))
+                .sorted(Comparator.comparing(ScreenshotDto::getDate).reversed())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(screenshotList);
+    }
+
+    // 사용자가 선택한 스크린샷 조회
+    @GetMapping("/{filename}")
+    public ResponseEntity<ScreenshotDto> getScreenshot(
+            @RequestParam("email") String email,
+            @PathVariable String filename) {
+        File file = new File(UPLOAD_DIR + filename);
+        if (!file.exists()) {
+            ScreenshotDto error = new ScreenshotDto(
+                    "no " + filename,
+                    "",
+                    null
+            );
+            return ResponseEntity.badRequest().body(error);
+        }
+
+        ScreenshotDto screenshotDto = new ScreenshotDto(
+                file.getName(),
+                file.getAbsolutePath(),
+                "2024-09-23"
+        );
+        return ResponseEntity.ok(screenshotDto);
+    }
+
+    // 찍은 스크린샷 프론트에서 공유 작업하면 링크 전달
+    @GetMapping("/{filename}")
+    public ResponseEntity<String> getScreenshotLink(
+            @RequestParam("email") String email,
+            @PathVariable String filename) {
+        File file = new File(UPLOAD_DIR + filename);
+        if (!file.exists()) {
+            return ResponseEntity.badRequest().body("file doesn't exist");
+        }
+        return ResponseEntity.ok(file.getAbsolutePath());
+    }
 }
