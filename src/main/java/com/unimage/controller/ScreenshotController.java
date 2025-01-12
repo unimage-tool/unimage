@@ -113,4 +113,40 @@ public class ScreenshotController {
         }
         return ResponseEntity.ok(file.getAbsolutePath());
     }
+
+    // 파일명 수정
+    @PutMapping("/modify")
+    public ResponseEntity<String> modifyScreenshot(
+            @RequestParam("email") String email,
+            @RequestParam("filename") String filename,
+            @RequestParam("newFilename") String newFilename) {
+
+        if (filename == null || filename.isEmpty()) {
+            return ResponseEntity.badRequest().body("filename invalid");
+        }
+
+        if (newFilename == null || newFilename.isEmpty()) {
+            return ResponseEntity.badRequest().body("newFilename invalid");
+        }
+
+        File originalFile = new File(UPLOAD_DIR + filename);
+        File newFile = new File(UPLOAD_DIR + newFilename);
+        if (!originalFile.exists()) {
+            return ResponseEntity.badRequest().body("originalFile not found");
+        }
+        if (newFile.exists()) {
+            return ResponseEntity.badRequest().body("newFile already exists");
+        }
+
+        try {
+            if (originalFile.renameTo(newFile)) {
+                return ResponseEntity.ok("modifying filename successful");
+            } else {
+                return ResponseEntity.status(500).body("modifying " + filename + " to " + newFilename + " failed");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("modifying " + filename + " to " + newFilename + " error occurred");
+        }
+    }
 }
