@@ -9,12 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-
 @RestController
 @RequestMapping("/screenshot")
 public class ScreenshotController {
-
     private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
 
     // 스크린샷, 스크린샷 파일명 전달로 스크린샷 저장
@@ -23,7 +20,6 @@ public class ScreenshotController {
             @RequestParam("email") String email,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "filename", required = false) String filename) {
-
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("screenshot empty");
         }
