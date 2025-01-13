@@ -2,14 +2,11 @@ package com.unimage.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.Date;
 
 @Data
 @AllArgsConstructor
 public class ScreenshotDto {
-    private String fileName;
-    private String filePath;
-    private String date;
+    private final String fileName; // 생성시 저장한 파일 명 ex) "logo.png"
+    private final String filePath; // 생성시 저장한 경로 ex) "C:/Server/Unimage~~"
+    private final String date; // 생성 날짜 ex) "2024-09-23"
 }

@@ -1,6 +1,7 @@
 package com.unimage.controller;
 
 import com.unimage.dto.ScreenshotDto;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,7 +71,11 @@ public class ScreenshotController {
         File uploadDir = new File(UPLOAD_DIR);
         File[] files = uploadDir.listFiles();
 
-        if (files == null || files.length == 0) {
+        if(files == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        if (files.length == 0) {
             return ResponseEntity.ok(Collections.emptyList());
         }
 
@@ -80,9 +85,6 @@ public class ScreenshotController {
                         "fileName",
                         "C:/Server/Unimage~~",
                         "2024-09-23"
-                        // fileName, 생성시 저장한 파일 명
-                        // filePath, 생성시 저장해놓은 경로
-                        // date , 생성 날짜 연,월,일
                 ))
                 .sorted(Comparator.comparing(ScreenshotDto::getDate).reversed())
                 .collect(Collectors.toList());
