@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,10 +44,22 @@ public class ScreenshotController {
             File destinationFile = new File(UPLOAD_DIR + filename);
             file.transferTo(destinationFile);
 
-            return ResponseEntity.ok("Uploading screenshot successful");
+            return ResponseEntity.ok("");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("FileNotFoundException occurred uploading screenshot: " + e.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Uploading screenshot error occurred");
+            return ResponseEntity.status(500).body("IOException occurred uploading screenshot: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("IllegalStateException occurred uploading screenshot: " + e.getMessage());
+        } catch (SecurityException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("SecurityException occurred uploading screenshot: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("unexpected exception occurred uploading screenshot: " + e.getMessage());
         }
     }
 
