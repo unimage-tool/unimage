@@ -98,12 +98,7 @@ public class ScreenshotController {
             @PathVariable String filename) {
         File file = new File(UPLOAD_DIR + filename);
         if (!file.exists()) {
-            ScreenshotDto error = new ScreenshotDto(
-                    "no " + filename,
-                    "",
-                    null
-            );
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         ScreenshotDto screenshotDto = new ScreenshotDto(
