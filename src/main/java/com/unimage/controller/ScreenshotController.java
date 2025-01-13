@@ -71,7 +71,7 @@ public class ScreenshotController {
         File uploadDir = new File(UPLOAD_DIR);
         File[] files = uploadDir.listFiles();
 
-        if(files == null) {
+        if (files == null) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
@@ -109,14 +109,14 @@ public class ScreenshotController {
         return ResponseEntity.ok(screenshotDto);
     }
 
-    // 찍은 스크린샷 프론트에서 공유 작업하면 링크 전달
+    // 스크린샷 공유용 링크
     @GetMapping("/{filename}")
     public ResponseEntity<String> getScreenshotLink(
             @RequestParam("email") String email,
             @PathVariable String filename) {
         File file = new File(UPLOAD_DIR + filename);
         if (!file.exists()) {
-            return ResponseEntity.badRequest().body("file doesn't exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.ok(file.getAbsolutePath());
     }
