@@ -151,34 +151,49 @@ public class ScreenshotController {
         }
     }
 
-    // 1개 이상의 파일 삭제
+    // 유효한 파일들만 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteScreenshot(
+    public ResponseEntity<List<String>> deleteScreenshot(
             @RequestParam("email") String email,
             @RequestParam("fileList") List<String> fileList) {
         if (fileList == null || fileList.isEmpty()) {
-            return ResponseEntity.badRequest().body("fileList invalid");
+            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
         }
+
+        List<String> filesResult = new ArrayList<>();
+        int invalidFileCnt = 0;
 
         for (String filename : fileList) {
             if (filename == null || filename.isEmpty()) {
-                return ResponseEntity.badRequest().body("filename invalid");
+                filesResult.add("filename needs at least 1 character");
+                invalidFileCnt++;
+                continue;
             }
 
-            File deleteFile = new File(UPLOAD_DIR + filename);
-            if (!deleteFile.exists()) {
-                return ResponseEntity.badRequest().body(filename + " doesn't exist");
+            File file = new File(UPLOAD_DIR + filename);
+            if (!file.exists()) {
+                filesResult.add(filename + " doesn't exist");
+                continue;
             }
 
             try {
-                if (!deleteFile.delete()) {
-                    return ResponseEntity.status(500).body("deleting " + filename + " failed");
+                if (file.delete()) {
+                    filesResult.add(filename + " deleted");
+                } else {
+                    invalidFileCnt++;
+                    filesResult.add(filename + " not deleted: is using or need permission");
                 }
             } catch (Exception e) {
+                invalidFileCnt++;
                 e.printStackTrace();
-                return ResponseEntity.status(500).body("deleting " + filename + " error occurred");
+                filesResult.add(filename + " not deleted: " + e.getMessage());
             }
         }
-        return ResponseEntity.ok("delete successful");
+
+        if (invalidFileCnt == 0) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().body(filesResult);
+        }
     }
 }
