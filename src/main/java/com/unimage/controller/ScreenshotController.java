@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,19 +72,20 @@ public class ScreenshotController {
         }
     }
 
-    // 사용자의 모든 스크린샷 날짜순 조회 및 경로 전달하여 다운로드 가능
+    // 날짜순 전체 조회
     @GetMapping("/all")
-    public ResponseEntity<List<ScreenshotDto>> getAllScreenshots(
+    public ResponseEntity<ApiResponse<List<ScreenshotDto>>> getAllScreenshots(
             @RequestParam("email") String email) {
         File uploadDir = new File(UPLOAD_DIR);
         File[] files = uploadDir.listFiles();
 
         if (files == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            String message = "can't load screenshots";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (files.length == 0) {
-            return ResponseEntity.ok(Collections.emptyList());
+            return new ResponseEntity<>(ApiResponse.success(200, Collections.emptyList()), HttpStatus.OK);
         }
 
         List<ScreenshotDto> screenshotList = Arrays.stream(files)
@@ -92,9 +95,11 @@ public class ScreenshotController {
                         "C:/Server/Unimage~~",
                         "2024-09-23"
                 ))
-                .sorted(Comparator.comparing(ScreenshotDto::getDate).reversed())
+                .sorted(Comparator.comparing(
+                        (ScreenshotDto screenshot) -> LocalDate.parse(screenshot.date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                ).reversed())
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(screenshotList);
+        return new ResponseEntity<>(ApiResponse.success(200, screenshotList), HttpStatus.OK);
     }
 
     // 사용자가 선택한 스크린샷 조회
