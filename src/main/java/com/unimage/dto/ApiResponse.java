@@ -47,7 +47,7 @@ public class ApiResponse<T> {
      * @param message 실패 메시지
      * @return 실패 응답 객체
      */
-    public static ApiResponse<Void> error(int status, String message) {
+    public static <T> ApiResponse<T> error(int status, String message) {
         return new ApiResponse<>(status, message, null);
     }
 }

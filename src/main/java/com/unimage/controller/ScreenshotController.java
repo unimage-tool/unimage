@@ -1,5 +1,6 @@
 package com.unimage.controller;
 
+import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -16,6 +20,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/screenshot")
 public class ScreenshotController {
     private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
+    private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
     // 스크린샷, 스크린샷 파일명 전달로 스크린샷 저장
     @PostMapping("/upload")
@@ -151,49 +156,85 @@ public class ScreenshotController {
         }
     }
 
-    // 유효한 파일들만 삭제
+    // 스크린샷 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<List<String>> deleteScreenshot(
+    public ResponseEntity<ApiResponse<List<String>>> deleteScreenshot(
             @RequestParam("email") String email,
             @RequestParam("fileList") List<String> fileList) {
         if (fileList == null || fileList.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+            String message = "fileList needs at least 1 file";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
         }
 
-        List<String> filesResult = new ArrayList<>();
-        int invalidFileCnt = 0;
-
-        for (String filename : fileList) {
+        // 리스트 내의 파일 이름의 유효성 검사
+        for (int i = 0; i < fileList.size(); i++) {
+            String filename = fileList.get(i);
             if (filename == null || filename.isEmpty()) {
-                filesResult.add("filename needs at least 1 character");
-                invalidFileCnt++;
-                continue;
+                String message = "index " + i + " data in fileList needs at least 1 character";
+                return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
             }
 
             File file = new File(UPLOAD_DIR + filename);
             if (!file.exists()) {
-                filesResult.add(filename + " doesn't exist");
-                continue;
+                String message = filename + "doesn't exist";
+                return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
             }
+        }
+
+        // 파일 백업
+        List<File> backupFiles = new ArrayList<>();
+        File backupDir = new File(BACKUP_DIR);
+        if (!backupDir.exists()) {
+            backupDir.mkdirs();
+        }
+        for (String filename : fileList) {
+            File originalFile = new File(UPLOAD_DIR + filename);
+            File backupFile = new File(BACKUP_DIR + filename);
 
             try {
-                if (file.delete()) {
-                    filesResult.add(filename + " deleted");
-                } else {
-                    invalidFileCnt++;
-                    filesResult.add(filename + " not deleted: is using or need permission");
-                }
-            } catch (Exception e) {
-                invalidFileCnt++;
+                Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                backupFiles.add(backupFile);
+            } catch (UnsupportedOperationException e) {
                 e.printStackTrace();
-                filesResult.add(filename + " not deleted: " + e.getMessage());
+                String message = "Failed to make backup file: " + filename + " is read-only";
+                return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                e.printStackTrace();
+                String message = "Failed to make backup file: not enough storage";
+                return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
 
-        if (invalidFileCnt == 0) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().body(filesResult);
+        // 파일 삭제
+        for (int i = 0; i < fileList.size(); i++) {
+            String filename = fileList.get(i);
+            File file = new File(UPLOAD_DIR + filename);
+
+            try {
+                if (!file.delete()) {
+                    throw new RuntimeException();
+                }
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+                for (int j = 0; j < i; j++) {
+                    File backupFile = backupFiles.get(j);
+                    try {
+                        Files.copy(backupFile.toPath(), new File(UPLOAD_DIR + backupFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (UnsupportedOperationException ex) {
+                        e.printStackTrace();
+                        String message = "Failed to restore file: " + filename + " is read-only";
+                        return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+                    } catch (IOException ex) {
+                        e.printStackTrace();
+                        String message = "Failed to restore file: not enough storage";
+                        return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+                String message = filename + " not deleted: file using or need permission";
+                return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
+
+        return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
     }
 }
