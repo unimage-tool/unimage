@@ -99,12 +99,18 @@ public class ScreenshotController {
 
     // 사용자가 선택한 스크린샷 조회
     @GetMapping("/{filename}")
-    public ResponseEntity<ScreenshotDto> getScreenshot(
+    public ResponseEntity<ApiResponse<ScreenshotDto>> getScreenshot(
             @RequestParam("email") String email,
             @PathVariable String filename) {
+        if (filename == null || filename.isEmpty()) {
+            String message = "filename needs at least 1 character";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+        }
+
         File file = new File(UPLOAD_DIR + filename);
         if (!file.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            String message = filename + " does not exist";
+            return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
         }
 
         ScreenshotDto screenshotDto = new ScreenshotDto(
@@ -112,7 +118,7 @@ public class ScreenshotController {
                 file.getAbsolutePath(),
                 "2024-09-23"
         );
-        return ResponseEntity.ok(screenshotDto);
+        return new ResponseEntity<>(ApiResponse.success(200, screenshotDto), HttpStatus.OK);
     }
 
     // 스크린샷 공유용 링크
