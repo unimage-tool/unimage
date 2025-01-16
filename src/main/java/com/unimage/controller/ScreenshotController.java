@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
@@ -23,14 +24,15 @@ public class ScreenshotController {
     private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
     private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
-    // 스크린샷, 스크린샷 파일명 전달로 스크린샷 저장
+    // 스크린샷 저장
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadScreenshot(
+    public ResponseEntity<ApiResponse<String>> uploadScreenshot(
             @RequestParam("email") String email,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "filename", required = false) String filename) {
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("screenshot empty");
+        if (file == null || file.isEmpty()) {
+            String message = "screenshot file is empty";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
         }
 
         if (filename == null || filename.isEmpty()) {
@@ -39,7 +41,8 @@ public class ScreenshotController {
 
         File checkFileExist = new File(UPLOAD_DIR + filename);
         if (checkFileExist.exists()) {
-            return ResponseEntity.badRequest().body("screenshot already exists");
+            String message = filename + " already exists";
+            return new ResponseEntity<>(ApiResponse.error(409, message), HttpStatus.CONFLICT);
         }
 
         try {
@@ -51,22 +54,23 @@ public class ScreenshotController {
             File destinationFile = new File(UPLOAD_DIR + filename);
             file.transferTo(destinationFile);
 
-            return ResponseEntity.ok("");
-        } catch (FileNotFoundException e) {
+            return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
+        } catch (SocketException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("FileNotFoundException occurred uploading screenshot: " + e.getMessage());
+            String message = "network error occurred";
+            return new ResponseEntity<>(ApiResponse.error(503, message), HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (InterruptedIOException e) {
+            e.printStackTrace();
+            String message = "timeout occurred";
+            return new ResponseEntity<>(ApiResponse.error(504, message), HttpStatus.GATEWAY_TIMEOUT);
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("IOException occurred uploading screenshot: " + e.getMessage());
+            String message = "not enough storage";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IllegalStateException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("IllegalStateException occurred uploading screenshot: " + e.getMessage());
-        } catch (SecurityException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("SecurityException occurred uploading screenshot: " + e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("unexpected exception occurred uploading screenshot: " + e.getMessage());
+            String message = "file already stored";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
