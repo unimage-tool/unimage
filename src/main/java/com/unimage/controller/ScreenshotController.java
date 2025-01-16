@@ -117,14 +117,20 @@ public class ScreenshotController {
 
     // 스크린샷 공유용 링크
     @GetMapping("/{filename}")
-    public ResponseEntity<String> getScreenshotLink(
+    public ResponseEntity<ApiResponse<String>> getScreenshotLink(
             @RequestParam("email") String email,
             @PathVariable String filename) {
+        if (filename == null || filename.isEmpty()) {
+            String message = "filename needs at least 1 character";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+        }
+
         File file = new File(UPLOAD_DIR + filename);
         if (!file.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            String message = filename + " does not exist";
+            return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
         }
-        return ResponseEntity.ok(file.getAbsolutePath());
+        return new ResponseEntity<>(ApiResponse.success(200, file.getAbsolutePath()), HttpStatus.OK);
     }
 
     // 파일명 수정
