@@ -1,6 +1,5 @@
 package com.unimage.controller;
 
-import com.sun.tools.javac.util.DefinedBy;
 import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
 import org.springframework.http.HttpStatus;
@@ -11,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
@@ -82,10 +80,6 @@ public class ScreenshotController {
         if (files == null) {
             String message = "can't load screenshots";
             return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        if (files.length == 0) {
-            return new ResponseEntity<>(ApiResponse.success(200, Collections.emptyList()), HttpStatus.OK);
         }
 
         List<ScreenshotDto> screenshotList = Arrays.stream(files)
