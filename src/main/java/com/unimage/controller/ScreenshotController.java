@@ -1,5 +1,6 @@
 package com.unimage.controller;
 
+import com.sun.tools.javac.util.DefinedBy;
 import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
 import org.springframework.http.HttpStatus;
@@ -128,31 +129,36 @@ public class ScreenshotController {
 
     // 파일명 수정
     @PutMapping("/modify")
-    public ResponseEntity<String> modifyScreenshot(
+    public ResponseEntity<ApiResponse<String>> modifyScreenshot(
             @RequestParam("email") String email,
             @RequestParam("filename") String filename,
             @RequestParam("newFilename") String newFilename) {
         if (filename == null || filename.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+            String message = "filename needs at least 1 character";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
         }
 
         if (newFilename == null || newFilename.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+            String message = "newFilename needs at least 1 character";
+            return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
         }
 
         File originalFile = new File(UPLOAD_DIR + filename);
         File newFile = new File(UPLOAD_DIR + newFilename);
         if (!originalFile.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            String message = filename + " does not exist";
+            return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
         }
         if (newFile.exists()) {
-            return ResponseEntity.badRequest().body("newFile already exists");
+            String message = newFilename + " already exists";
+            return new ResponseEntity<>(ApiResponse.error(409, message), HttpStatus.CONFLICT);
         }
 
         if (originalFile.renameTo(newFile)) {
-            return ResponseEntity.ok().build();
+            return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
         } else {
-            return ResponseEntity.status(500).body("file using or need w/x permission");
+            String message = filename + " is locked";
+            return new ResponseEntity<>(ApiResponse.error(403, message), HttpStatus.FORBIDDEN);
         }
     }
 
