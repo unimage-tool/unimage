@@ -2,6 +2,8 @@ package com.unimage.controller;
 
 import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,15 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.IIOException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.InterruptedByTimeoutException;
-import java.nio.file.FileSystemException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/screenshot")
 public class ScreenshotController {
+    private static final Logger logger = LoggerFactory.getLogger(ScreenshotController.class);
     private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
     private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
@@ -38,7 +38,6 @@ public class ScreenshotController {
      * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
      * @throws IIOException                  파일이 손상됐거나 전달된 이미지 형식을 지원하지 않는 경우
      * @throws ClosedChannelException        파일 스트림이 닫혀 있는 경우
-     * @throws FileNotFoundException         이미지를 전송하는 파일 경로가 존재하지 않는 경우
      * @throws FileSystemException           파일이 잠겼거나 파일 접근 권한이 필요한 경우
      * @throws SocketException               이미지 저장 중에 네트워크가 끊긴 경우
      * @throws InterruptedByTimeoutException 이미지 저장 요청 시간이 초과된 경우
@@ -84,10 +83,6 @@ public class ScreenshotController {
             e.printStackTrace();
             String message = "file stream is closed";
             return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            String message = "destination path doesn't exist";
-            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (FileSystemException e) {
             e.printStackTrace();
             String message = "file needs permission or is locked";
@@ -114,7 +109,6 @@ public class ScreenshotController {
             return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 
     /**
      * 날짜순으로 저장된 스크린샷을 전부 불러옵니다.
@@ -245,7 +239,7 @@ public class ScreenshotController {
 
     // 스크린샷 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<List<String>>> deleteScreenshot(
+    public ResponseEntity<ApiResponse<Void>> deleteScreenshot(
             @RequestParam("email") String email,
             @RequestParam("fileList") List<String> fileList) {
         if (fileList == null || fileList.isEmpty()) {
@@ -283,13 +277,21 @@ public class ScreenshotController {
                 backupFiles.add(backupFile);
             } catch (UnsupportedOperationException e) {
                 e.printStackTrace();
-                String message = "Failed to make backup file: " + filename + " is read-only";
-                return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+                logger.error("Backup failed file: {}. Reason: {} read-only. Exception: {}", filename, backupFile.getName(), e.getMessage());
+            } catch (SocketException e) {
+                e.printStackTrace();
+                logger.error("Backup failed file: {}. Reason: Network error. Exception: {}", filename, e.getMessage());
+            } catch (InterruptedByTimeoutException e) {
+                e.printStackTrace();
+                logger.error("Backup failed file: {}. Reason: Timeout. Exception: {}", filename, e.getMessage());
             } catch (IOException e) {
                 e.printStackTrace();
-                String message = "Failed to make backup file: not enough storage";
-                return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+                logger.error("Backup failed file: {}. Reason: Unexpected. Exception: {}", filename, e.getMessage());
             }
+        }
+        if (backupFiles.size() != fileList.size()) {
+            String message = "Error occurred making backup file. Try it later";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // 파일 삭제
@@ -297,29 +299,51 @@ public class ScreenshotController {
             String filename = fileList.get(i);
             File file = new File(UPLOAD_DIR + filename);
 
-            try {
-                if (!file.delete()) {
-                    throw new RuntimeException();
-                }
-            } catch (RuntimeException e) {
-                e.printStackTrace();
+            if (!file.delete()) {
                 for (int j = 0; j < i; j++) {
+                    boolean flag = false;
                     File backupFile = backupFiles.get(j);
+                    File originalFile = new File(UPLOAD_DIR + backupFile.getName());
+
                     try {
-                        Files.copy(backupFile.toPath(), new File(UPLOAD_DIR + backupFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (UnsupportedOperationException ex) {
+                        Files.copy(backupFile.toPath(), originalFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        flag = true;
+                    } catch (UnsupportedOperationException e) {
                         e.printStackTrace();
-                        String message = "Failed to restore file: " + filename + " is read-only";
-                        return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
-                    } catch (IOException ex) {
+                        logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}", filename, originalFile.getName(), e.getMessage());
+                    } catch (SocketException e) {
                         e.printStackTrace();
-                        String message = "Failed to restore file: not enough storage";
-                        return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+                        logger.error("Restore failed file: {}. Reason: Network error. Exception: {}", filename, e.getMessage());
+                    } catch (InterruptedByTimeoutException e) {
+                        e.printStackTrace();
+                        logger.error("Restore failed file: {}. Reason: Timeout. Exception: {}", filename, e.getMessage());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}", filename, e.getMessage());
+                    } finally {
+                        if (backupFile.exists() && flag) {
+                            if (!backupFile.delete()) {
+                                logger.error("Failed to delete restored file in backup: {}", backupFile.getName());
+                            }
+                        }
                     }
                 }
-                String message = filename + " not deleted: file using or need permission";
+                logger.error("Failed to delete file: {}", filename);
+                String message = "Error occurred deleting file. Try it later";
                 return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
             }
+        }
+
+        //백업 파일 및 디렉토리 삭제
+        if (backupDir.exists()) {
+            for (File backupFile : backupFiles) {
+                if (!backupFile.delete()) {
+                    logger.error("Failed to delete backup file: {}", backupFile.getName());
+                }
+            }
+        }
+        if (!backupDir.delete()) {
+            logger.error("Failed to delete backup Directory: {}", backupDir.getAbsolutePath());
         }
 
         return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
