@@ -35,7 +35,7 @@ public class ScreenshotController {
      * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
      * @param file     스크린샷을 저장하는데 쓰이며, null일 수 없습니다.
      * @param filename 스크린샷의 파일명을 지정하는데 쓰이며, null로 전달될 경우 임시 UUID가 부여됩니다.
-     * @return ApiResponse를 통해 성공/실패 여부를 반환합니다.
+     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
      * @throws IIOException                  파일이 손상됐거나 전달된 이미지 형식을 지원하지 않는 경우
      * @throws ClosedChannelException        파일 스트림이 닫혀 있는 경우
      * @throws FileNotFoundException         이미지를 전송하는 파일 경로가 존재하지 않는 경우
@@ -47,7 +47,7 @@ public class ScreenshotController {
      * @throws IllegalStateException         저장 경로에 파일이 이미 저장되어 있는 경우
      */
     @PostMapping("/upload")
-    public ResponseEntity<ApiResponse<String>> uploadScreenshot(
+    public ResponseEntity<ApiResponse<Void>> uploadScreenshot(
             @RequestParam("email") String email,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "filename", required = false) String filename) {
@@ -115,7 +115,13 @@ public class ScreenshotController {
         }
     }
 
-    // 날짜순 전체 조회
+
+    /**
+     * 날짜순으로 저장된 스크린샷을 전부 불러옵니다.
+     *
+     * @param email 사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 리스트를 반환합니다.
+     */
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<ScreenshotDto>>> getAllScreenshots(
             @RequestParam("email") String email) {
@@ -141,7 +147,13 @@ public class ScreenshotController {
         return new ResponseEntity<>(ApiResponse.success(200, screenshotList), HttpStatus.OK);
     }
 
-    // 사용자가 선택한 스크린샷 조회
+    /**
+     * 지정된 스크린샷 정보를 불러옵니다.
+     *
+     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @param filename 파일을 식별하는데 사용되고, null일 수 없습니다.
+     * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 객체를 반환합니다.
+     */
     @GetMapping("/{filename}")
     public ResponseEntity<ApiResponse<ScreenshotDto>> getScreenshot(
             @RequestParam("email") String email,
@@ -165,7 +177,13 @@ public class ScreenshotController {
         return new ResponseEntity<>(ApiResponse.success(200, screenshotDto), HttpStatus.OK);
     }
 
-    // 스크린샷 공유용 링크
+    /**
+     * 스크린샷 링크를 불러옵니다.
+     *
+     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @param filename 파일을 식별하는데 사용되고, null일 수 없습니다.
+     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
+     */
     @GetMapping("/{filename}")
     public ResponseEntity<ApiResponse<String>> getScreenshotLink(
             @RequestParam("email") String email,
@@ -183,7 +201,14 @@ public class ScreenshotController {
         return new ResponseEntity<>(ApiResponse.success(200, file.getAbsolutePath()), HttpStatus.OK);
     }
 
-    // 파일명 수정
+    /**
+     * 지정된 파일을 파일명을 수정합니다.
+     *
+     * @param email       사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @param filename    수정될 파일의 기존 파일명이고, null일 수 없습니다.
+     * @param newFilename 수정될 파일의 새 파일명이고, null일 수 없습니다.
+     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
+     */
     @PutMapping("/modify")
     public ResponseEntity<ApiResponse<String>> modifyScreenshot(
             @RequestParam("email") String email,
