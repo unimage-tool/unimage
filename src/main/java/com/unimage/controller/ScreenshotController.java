@@ -30,11 +30,12 @@ public class ScreenshotController {
     private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
     /**
-     * 사용자가 찍은 스크린샷을 저장합니다.
+     * 전달된 스크린샷 파일을 지정된 파일명으로 저장합니다.
+     * 파일명이 null로 전달될 경우 UUID를 생성하여 저장합니다.
      *
-     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
-     * @param file     스크린샷을 저장하는데 쓰이며, null일 수 없습니다.
-     * @param filename 스크린샷의 파일명을 지정하는데 쓰이며, null로 전달될 경우 임시 UUID가 부여됩니다.
+     * @param email    사용자 고유 식별자
+     * @param file     저장할 스크린샷 파일
+     * @param filename 저장할 파일명 (null일 경우 UUID 부여)
      * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
      * @throws IIOException                  파일이 손상됐거나 전달된 이미지 형식을 지원하지 않는 경우
      * @throws ClosedChannelException        파일 스트림이 닫혀 있는 경우
@@ -113,7 +114,7 @@ public class ScreenshotController {
     /**
      * 날짜순으로 저장된 스크린샷을 전부 불러옵니다.
      *
-     * @param email 사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @param email 사용자 고유 식별자
      * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 리스트를 반환합니다.
      */
     @GetMapping("/all")
@@ -144,8 +145,8 @@ public class ScreenshotController {
     /**
      * 지정된 스크린샷 정보를 불러옵니다.
      *
-     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
-     * @param filename 파일을 식별하는데 사용되고, null일 수 없습니다.
+     * @param email    사용자 고유 식별자
+     * @param filename 반환할 스크린샷 파일명
      * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 객체를 반환합니다.
      */
     @GetMapping("/{filename}")
@@ -174,8 +175,8 @@ public class ScreenshotController {
     /**
      * 스크린샷 링크를 불러옵니다.
      *
-     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
-     * @param filename 파일을 식별하는데 사용되고, null일 수 없습니다.
+     * @param email    사용자 고유 식별자
+     * @param filename 링크를 생성할 파일명
      * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
      */
     @GetMapping("/{filename}")
@@ -198,9 +199,9 @@ public class ScreenshotController {
     /**
      * 지정된 파일을 파일명을 수정합니다.
      *
-     * @param email       사용자를 식별하는데 쓰이고, null일 수 없습니다.
-     * @param filename    수정될 파일의 기존 파일명이고, null일 수 없습니다.
-     * @param newFilename 수정될 파일의 새 파일명이고, null일 수 없습니다.
+     * @param email       사용자 고유 식별자
+     * @param filename    기존 파일명
+     * @param newFilename 새 파일명
      * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
      */
     @PutMapping("/modify")
@@ -237,7 +238,18 @@ public class ScreenshotController {
         }
     }
 
-    // 스크린샷 삭제
+
+    /**
+     * 리스트에 있는 모든 스크린샷을 삭제합니다.
+     *
+     * @param email    사용자 고유 식별자
+     * @param fileList 삭제할 파일명을 담고있는 리스트
+     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환
+     * @throws UnsupportedOperationException 덮어쓰이는 파일이 읽기 전용이라 쓰지 못하는 경우
+     * @throws SocketException               네트워가 끊긴 경우
+     * @throws InterruptedByTimeoutException 이미지 삭제 요청이 시간 초과된 경우
+     * @throws IOException                   I/O 예외 중 예상치 못한 예외가 발생한 경우
+     */
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<Void>> deleteScreenshot(
             @RequestParam("email") String email,
