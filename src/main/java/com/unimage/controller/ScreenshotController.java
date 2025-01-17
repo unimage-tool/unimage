@@ -7,10 +7,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.InterruptedByTimeoutException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
@@ -24,7 +29,23 @@ public class ScreenshotController {
     private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
     private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
-    // 스크린샷 저장
+    /**
+     * 사용자가 찍은 스크린샷을 저장합니다.
+     *
+     * @param email    사용자를 식별하는데 쓰이고, null일 수 없습니다.
+     * @param file     스크린샷을 저장하는데 쓰이며, null일 수 없습니다.
+     * @param filename 스크린샷의 파일명을 지정하는데 쓰이며, null로 전달될 경우 임시 UUID가 부여됩니다.
+     * @return ApiResponse를 통해 성공/실패 여부를 반환합니다.
+     * @throws IIOException                  파일이 손상됐거나 전달된 이미지 형식을 지원하지 않는 경우
+     * @throws ClosedChannelException        파일 스트림이 닫혀 있는 경우
+     * @throws FileNotFoundException         이미지를 전송하는 파일 경로가 존재하지 않는 경우
+     * @throws FileSystemException           파일이 잠겼거나 파일 접근 권한이 필요한 경우
+     * @throws SocketException               이미지 저장 중에 네트워크가 끊긴 경우
+     * @throws InterruptedByTimeoutException 이미지 저장 요청 시간이 초과된 경우
+     * @throws InterruptedIOException        파일 전송 중 중단된 경우
+     * @throws IOException                   I/O 예외 중 예상치 못한 예외가 발생한 경우
+     * @throws IllegalStateException         저장 경로에 파일이 이미 저장되어 있는 경우
+     */
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<String>> uploadScreenshot(
             @RequestParam("email") String email,
@@ -55,17 +76,37 @@ public class ScreenshotController {
             file.transferTo(destinationFile);
 
             return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
+        } catch (IIOException e) {
+            e.printStackTrace();
+            String message = "file is damaged or not supported";
+            return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
+        } catch (ClosedChannelException e) {
+            e.printStackTrace();
+            String message = "file stream is closed";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            String message = "destination path doesn't exist";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (FileSystemException e) {
+            e.printStackTrace();
+            String message = "file needs permission or is locked";
+            return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (SocketException e) {
             e.printStackTrace();
             String message = "network error occurred";
             return new ResponseEntity<>(ApiResponse.error(503, message), HttpStatus.SERVICE_UNAVAILABLE);
-        } catch (InterruptedIOException e) {
+        } catch (InterruptedByTimeoutException e) {
             e.printStackTrace();
             String message = "timeout occurred";
             return new ResponseEntity<>(ApiResponse.error(504, message), HttpStatus.GATEWAY_TIMEOUT);
+        } catch (InterruptedIOException e) {
+            e.printStackTrace();
+            String message = "interrupt occurred: try it again";
+            return new ResponseEntity<>(ApiResponse.error(503, message), HttpStatus.SERVICE_UNAVAILABLE);
         } catch (IOException e) {
             e.printStackTrace();
-            String message = "not enough storage";
+            String message = "unexpected error " + e.getMessage();
             return new ResponseEntity<>(ApiResponse.error(500, message), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IllegalStateException e) {
             e.printStackTrace();
