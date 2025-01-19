@@ -22,6 +22,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 스크린샷 파일의 저장, 조회, 수정, 삭제와 같은 작업을 처리하는 API를 제공합니다.
+ *
+ * <p>주요 기능:
+ *
+ * <ul>
+ *     <li>전달된 한 장의 스크린샷 저장.</li>
+ *     <li>저장된 모든 스크린샷 조회.</li>
+ *     <li>선택한 하나의 스크린샷 조회.</li>
+ *     <li>스크린샷이 저장된 경로 조회.</li>
+ *     <li>스크린샷의 파일명 수정.</li>
+ *     <li>리스트 단위로 선택된 스크린샷 삭제, 실패 시 자동 복원.</li>
+ * </ul>
+ */
 @RestController
 @RequestMapping("/screenshot")
 public class ScreenshotController {
@@ -36,15 +50,8 @@ public class ScreenshotController {
      * @param email    사용자 고유 식별자
      * @param file     저장할 스크린샷 파일
      * @param filename 저장할 파일명 (null일 경우 UUID 부여)
-     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
-     * @throws IIOException                  파일이 손상됐거나 전달된 이미지 형식을 지원하지 않는 경우
-     * @throws ClosedChannelException        파일 스트림이 닫혀 있는 경우
-     * @throws FileSystemException           파일이 잠겼거나 파일 접근 권한이 필요한 경우
-     * @throws SocketException               이미지 저장 중에 네트워크가 끊긴 경우
-     * @throws InterruptedByTimeoutException 이미지 저장 요청 시간이 초과된 경우
-     * @throws InterruptedIOException        파일 전송 중 중단된 경우
-     * @throws IOException                   I/O 예외 중 예상치 못한 예외가 발생한 경우
-     * @throws IllegalStateException         저장 경로에 파일이 이미 저장되어 있는 경우
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
      */
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<Void>> uploadScreenshot(
@@ -112,10 +119,12 @@ public class ScreenshotController {
     }
 
     /**
-     * 날짜순으로 저장된 스크린샷을 전부 불러옵니다.
+     * 저장된 파일들을 날짜순으로 전부 불러옵니다.
      *
      * @param email 사용자 고유 식별자
-     * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 리스트를 반환합니다.
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 리스트 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
+     *         {@link ScreenshotDto}는 스크린샷의 파일명, 저장 경로, 생성일자를 포함
      */
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<ScreenshotDto>>> getAllScreenshots(
@@ -143,11 +152,13 @@ public class ScreenshotController {
     }
 
     /**
-     * 지정된 스크린샷 정보를 불러옵니다.
+     * 지정된 파일 정보를 불러옵니다.
      *
      * @param email    사용자 고유 식별자
-     * @param filename 반환할 스크린샷 파일명
-     * @return {@link ApiResponse}를 통해 {@link ScreenshotDto} 객체를 반환합니다.
+     * @param filename 반환할 파일의 파일명
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
+     *         {@link ScreenshotDto}는 스크린샷의 파일명, 저장 경로, 생성일자를 포함
      */
     @GetMapping("/{filename}")
     public ResponseEntity<ApiResponse<ScreenshotDto>> getScreenshot(
@@ -173,11 +184,12 @@ public class ScreenshotController {
     }
 
     /**
-     * 스크린샷 링크를 불러옵니다.
+     * 파일이 저장된 경로를 불러옵니다.
      *
      * @param email    사용자 고유 식별자
-     * @param filename 링크를 생성할 파일명
-     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
+     * @param filename 경로를 생성할 파일명
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK와 파일의 저장 경로 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
      */
     @GetMapping("/{filename}")
     public ResponseEntity<ApiResponse<String>> getScreenshotLink(
@@ -197,15 +209,16 @@ public class ScreenshotController {
     }
 
     /**
-     * 지정된 파일을 파일명을 수정합니다.
+     * 지정된 파일의 파일명을 수정합니다.
      *
      * @param email       사용자 고유 식별자
      * @param filename    기존 파일명
      * @param newFilename 새 파일명
-     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환합니다.
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
      */
     @PutMapping("/modify")
-    public ResponseEntity<ApiResponse<String>> modifyScreenshot(
+    public ResponseEntity<ApiResponse<Void>> modifyScreenshot(
             @RequestParam("email") String email,
             @RequestParam("filename") String filename,
             @RequestParam("newFilename") String newFilename) {
@@ -240,15 +253,13 @@ public class ScreenshotController {
 
 
     /**
-     * 리스트에 있는 모든 스크린샷을 삭제합니다.
+     * 전달된 파일 리스트를 삭제합니다.
+     * 삭제 중 오류 발생 시 모든 파일을 복원합니다.
      *
      * @param email    사용자 고유 식별자
      * @param fileList 삭제할 파일명을 담고있는 리스트
-     * @return {@link ApiResponse}를 통해 성공/실패 여부를 반환
-     * @throws UnsupportedOperationException 덮어쓰이는 파일이 읽기 전용이라 쓰지 못하는 경우
-     * @throws SocketException               네트워가 끊긴 경우
-     * @throws InterruptedByTimeoutException 이미지 삭제 요청이 시간 초과된 경우
-     * @throws IOException                   I/O 예외 중 예상치 못한 예외가 발생한 경우
+     * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환,
+     *         실패 시 상태 코드와 에러 메시지 반환
      */
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<Void>> deleteScreenshot(
@@ -346,7 +357,7 @@ public class ScreenshotController {
             }
         }
 
-        //백업 파일 및 디렉토리 삭제
+        // 백업 파일 및 디렉토리 삭제
         if (backupDir.exists()) {
             for (File backupFile : backupFiles) {
                 if (!backupFile.delete()) {
