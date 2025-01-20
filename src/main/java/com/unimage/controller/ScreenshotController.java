@@ -12,7 +12,6 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -149,15 +148,10 @@ public class ScreenshotController {
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
         .filter(File::isFile)
-        .map(file -> new ScreenshotDto(
-            "fileName",
-            "C:/Server/Unimage~~",
-            "2024-09-23"
+        .map(file -> new ScreenshotDto("fileName", "C:/Server/Unimage~~",
+            LocalDate.of(2024, 9, 23)
         ))
-        .sorted(Comparator.comparing(
-            (ScreenshotDto screenshot) -> LocalDate.parse(screenshot.date,
-                DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        ).reversed())
+        .sorted(Comparator.comparing((ScreenshotDto screenshot) -> screenshot.date).reversed())
         .collect(Collectors.toList());
     return new ResponseEntity<>(ApiResponse.success(200, screenshotList), HttpStatus.OK);
   }
@@ -188,7 +182,7 @@ public class ScreenshotController {
     ScreenshotDto screenshotDto = new ScreenshotDto(
         file.getName(),
         file.getAbsolutePath(),
-        "2024-09-23"
+        LocalDate.of(2024, 9, 23)
     );
     return new ResponseEntity<>(ApiResponse.success(200, screenshotDto), HttpStatus.OK);
   }
