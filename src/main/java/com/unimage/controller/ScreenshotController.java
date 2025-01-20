@@ -70,8 +70,8 @@ public class ScreenshotController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "filename", required = false) String filename) {
     if (file == null || file.isEmpty()) {
-      String message = "screenshot file is empty";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "screenshot file is empty"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     if (filename == null || filename.isEmpty()) {
@@ -80,8 +80,8 @@ public class ScreenshotController {
 
     File checkFileExist = new File(UPLOAD_DIR + filename);
     if (checkFileExist.exists()) {
-      String message = filename + " already exists";
-      return new ResponseEntity<>(ApiResponse.error(409, message), HttpStatus.CONFLICT);
+      return new ResponseEntity<>(ApiResponse.error(409, filename + " already exists"),
+          HttpStatus.CONFLICT);
     }
 
     try {
@@ -96,39 +96,35 @@ public class ScreenshotController {
       return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
     } catch (IIOException e) {
       e.printStackTrace();
-      String message = "file is damaged or not supported";
-      return new ResponseEntity<>(ApiResponse.error(400, message), HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(ApiResponse.error(400, "file is damaged or not supported"),
+          HttpStatus.BAD_REQUEST);
     } catch (ClosedChannelException e) {
       e.printStackTrace();
-      String message = "file stream is closed";
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(ApiResponse.error(500, "file stream is closed"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (FileSystemException e) {
       e.printStackTrace();
-      String message = "file needs permission or is locked";
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(ApiResponse.error(500, "file needs permission or is locked"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (SocketException e) {
       e.printStackTrace();
-      String message = "network error occurred";
-      return new ResponseEntity<>(ApiResponse.error(503, message), HttpStatus.SERVICE_UNAVAILABLE);
+      return new ResponseEntity<>(ApiResponse.error(503, "network error occurred"),
+          HttpStatus.SERVICE_UNAVAILABLE);
     } catch (InterruptedByTimeoutException e) {
       e.printStackTrace();
-      String message = "timeout occurred";
-      return new ResponseEntity<>(ApiResponse.error(504, message), HttpStatus.GATEWAY_TIMEOUT);
+      return new ResponseEntity<>(ApiResponse.error(504, "timeout occurred"),
+          HttpStatus.GATEWAY_TIMEOUT);
     } catch (InterruptedIOException e) {
       e.printStackTrace();
-      String message = "interrupt occurred: try it again";
-      return new ResponseEntity<>(ApiResponse.error(503, message), HttpStatus.SERVICE_UNAVAILABLE);
+      return new ResponseEntity<>(ApiResponse.error(503, "interrupt occurred: try it again"),
+          HttpStatus.SERVICE_UNAVAILABLE);
     } catch (IOException e) {
       e.printStackTrace();
-      String message = "unexpected error " + e.getMessage();
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(ApiResponse.error(500, "unexpected error " + e.getMessage()),
           HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (IllegalStateException e) {
       e.printStackTrace();
-      String message = "file already stored";
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(ApiResponse.error(500, "file already stored"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -147,8 +143,7 @@ public class ScreenshotController {
     File[] files = uploadDir.listFiles();
 
     if (files == null) {
-      String message = "can't load screenshots";
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(ApiResponse.error(500, "can't load screenshots"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -180,14 +175,14 @@ public class ScreenshotController {
       @RequestParam("email") String email,
       @PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
-      String message = "filename needs at least 1 character";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "filename needs at least 1 character"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     File file = new File(UPLOAD_DIR + filename);
     if (!file.exists()) {
-      String message = filename + " does not exist";
-      return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(ApiResponse.error(404, filename + " does not exist"),
+          HttpStatus.NOT_FOUND);
     }
 
     ScreenshotDto screenshotDto = new ScreenshotDto(
@@ -210,14 +205,14 @@ public class ScreenshotController {
       @RequestParam("email") String email,
       @PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
-      String message = "filename needs at least 1 character";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "filename needs at least 1 character"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     File file = new File(UPLOAD_DIR + filename);
     if (!file.exists()) {
-      String message = filename + " does not exist";
-      return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(ApiResponse.error(404, filename + " does not exist"),
+          HttpStatus.NOT_FOUND);
     }
     return new ResponseEntity<>(ApiResponse.success(200, file.getAbsolutePath()), HttpStatus.OK);
   }
@@ -236,31 +231,31 @@ public class ScreenshotController {
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
     if (filename == null || filename.isEmpty()) {
-      String message = "filename needs at least 1 character";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "filename needs at least 1 character"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     if (newFilename == null || newFilename.isEmpty()) {
-      String message = "newFilename needs at least 1 character";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "newFilename needs at least 1 character"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     File originalFile = new File(UPLOAD_DIR + filename);
     File newFile = new File(UPLOAD_DIR + newFilename);
     if (!originalFile.exists()) {
-      String message = filename + " does not exist";
-      return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(ApiResponse.error(404, filename + " does not exist"),
+          HttpStatus.NOT_FOUND);
     }
     if (newFile.exists()) {
-      String message = newFilename + " already exists";
-      return new ResponseEntity<>(ApiResponse.error(409, message), HttpStatus.CONFLICT);
+      return new ResponseEntity<>(ApiResponse.error(409, newFilename + " already exists"),
+          HttpStatus.CONFLICT);
     }
 
     if (originalFile.renameTo(newFile)) {
       return new ResponseEntity<>(ApiResponse.success(200, null), HttpStatus.OK);
     } else {
-      String message = filename + " is locked";
-      return new ResponseEntity<>(ApiResponse.error(403, message), HttpStatus.FORBIDDEN);
+      return new ResponseEntity<>(ApiResponse.error(403, filename + " is locked"),
+          HttpStatus.FORBIDDEN);
     }
   }
 
@@ -277,22 +272,23 @@ public class ScreenshotController {
       @RequestParam("email") String email,
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
-      String message = "fileList needs at least 1 file";
-      return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+      return new ResponseEntity<>(ApiResponse.error(406, "fileList needs at least 1 file"),
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     // 리스트 내의 파일 이름의 유효성 검사
     for (int i = 0; i < fileList.size(); i++) {
       String filename = fileList.get(i);
       if (filename == null || filename.isEmpty()) {
-        String message = "index " + i + " data in fileList needs at least 1 character";
-        return new ResponseEntity<>(ApiResponse.error(406, message), HttpStatus.NOT_ACCEPTABLE);
+        return new ResponseEntity<>(
+            ApiResponse.error(406, "index " + i + " data in fileList needs at least 1 character"),
+            HttpStatus.NOT_ACCEPTABLE);
       }
 
       File file = new File(UPLOAD_DIR + filename);
       if (!file.exists()) {
-        String message = filename + "doesn't exist";
-        return new ResponseEntity<>(ApiResponse.error(404, message), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(ApiResponse.error(404, filename + "doesn't exist"),
+            HttpStatus.NOT_FOUND);
       }
     }
 
@@ -328,8 +324,8 @@ public class ScreenshotController {
       }
     }
     if (backupFiles.size() != fileList.size()) {
-      String message = "Error occurred making backup file. Try it later";
-      return new ResponseEntity<>(ApiResponse.error(500, message),
+      return new ResponseEntity<>(
+          ApiResponse.error(500, "Error occurred making backup file. Try it later"),
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -373,8 +369,8 @@ public class ScreenshotController {
           }
         }
         logger.error("Failed to delete file: {}", filename);
-        String message = "Error occurred deleting file. Try it later";
-        return new ResponseEntity<>(ApiResponse.error(500, message),
+        return new ResponseEntity<>(
+            ApiResponse.error(500, "Error occurred deleting file. Try it later"),
             HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
