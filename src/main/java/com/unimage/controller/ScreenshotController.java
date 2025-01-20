@@ -330,14 +330,14 @@ public class ScreenshotController {
 
       if (!file.delete()) {
         for (int j = 0; j < i; j++) {
-          boolean flag = false;
+          boolean isBackupSuccessful = false;
           File backupFile = backupFiles.get(j);
           File originalFile = new File(UPLOAD_DIR + backupFile.getName());
 
           try {
             Files.copy(backupFile.toPath(), originalFile.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
-            flag = true;
+            isBackupSuccessful = true;
           } catch (UnsupportedOperationException e) {
             e.printStackTrace();
             logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}", filename,
@@ -355,7 +355,7 @@ public class ScreenshotController {
             logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}", filename,
                 e.getMessage());
           } finally {
-            if (backupFile.exists() && flag) {
+            if (backupFile.exists() && isBackupSuccessful) {
               if (!backupFile.delete()) {
                 logger.error("Failed to delete restored file in backup: {}", backupFile.getName());
               }
