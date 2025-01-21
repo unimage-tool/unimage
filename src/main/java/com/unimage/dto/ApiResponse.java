@@ -7,14 +7,10 @@ package com.unimage.dto;
  */
 public class ApiResponse<T> {
 
-  /**
-   * 응답 메시지
-   */
+  /** 응답 메시지 */
   public final String message;
 
-  /**
-   * 응답 데이터
-   */
+  /** 응답 데이터 */
   public final T data;
 
   /**
