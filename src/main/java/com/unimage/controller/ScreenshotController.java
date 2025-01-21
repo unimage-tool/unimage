@@ -121,8 +121,8 @@ public class ScreenshotController {
    * 저장된 파일들을 날짜순으로 전부 불러옵니다.
    *
    * @param email 사용자 고유 식별자
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 리스트 반환, 실패 시 상태 코드와 에러 메시지
-   * 반환 {@link ScreenshotDto}는 스크린샷의 파일명, 저장 경로, 생성일자를 포함
+   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto<List>} 반환, 실패 시 상태코드와 에러 메시지
+   * 반환 {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
    */
   @GetMapping("/all")
   public ApiResponse<List<ScreenshotDto>> getAllScreenshots(
@@ -148,7 +148,7 @@ public class ScreenshotController {
    * @param email    사용자 고유 식별자
    * @param filename 반환할 파일의 파일명
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
-   * {@link ScreenshotDto}는 스크린샷의 파일명, 저장 경로, 생성일자를 포함
+   * {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
    */
   @GetMapping("/{filename}")
   public ApiResponse<ScreenshotDto> getScreenshot(
