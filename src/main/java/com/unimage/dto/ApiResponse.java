@@ -1,17 +1,17 @@
 package com.unimage.dto;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 /**
  * API 응답을 나타내는 클래스입니다.
  *
  * @param <T> 응답 데이터의 타입
  */
-public class ApiResponse<T> {
+public class ApiResponse<T> extends ResponseEntity<T> {
 
   /** 응답 메시지 */
   public final String message;
-
-  /** 응답 데이터 */
-  public final T data;
 
   /**
    * ApiResponse 생성자
@@ -19,9 +19,9 @@ public class ApiResponse<T> {
    * @param message 응답 메시지
    * @param data    응답 데이터
    */
-  private ApiResponse(String message, T data) {
+  private ApiResponse(T body, String message, HttpStatus status) {
+    super(body, status);
     this.message = message;
-    this.data = data;
   }
 
   /**
@@ -31,8 +31,12 @@ public class ApiResponse<T> {
    * @param data 응답 데이터
    * @return 성공적인 응답 객체
    */
-  public static <T> ApiResponse<T> success(T data) {
-    return new ApiResponse<>(null, data);
+  public static <T> ApiResponse<T> success(T body) {
+    return new ApiResponse<>(body, null, HttpStatus.OK);
+  }
+
+  public static <T> ApiResponse<T> success() {
+    return new ApiResponse<>(null, null, HttpStatus.OK);
   }
 
   /**
@@ -41,7 +45,7 @@ public class ApiResponse<T> {
    * @param message 실패 메시지
    * @return 실패 응답 객체
    */
-  public static <T> ApiResponse<T> error(String message) {
-    return new ApiResponse<>(message, null);
+  public static <T> ApiResponse<T> error(String message, HttpStatus status) {
+    return new ApiResponse<>(null, message, status);
   }
 }
