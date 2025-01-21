@@ -77,8 +77,7 @@ public class ScreenshotController {
       filename = UUID.randomUUID().toString();
     }
 
-    File checkFileExist = new File(UPLOAD_DIR + filename);
-    if (checkFileExist.exists()) {
+    if (new File(UPLOAD_DIR + filename).exists()) {
       return new ResponseEntity<>(ApiResponse.error(filename + " already exists"),
           HttpStatus.CONFLICT);
     }
@@ -89,8 +88,7 @@ public class ScreenshotController {
         uploadDir.mkdirs();
       }
 
-      File destinationFile = new File(UPLOAD_DIR + filename);
-      file.transferTo(destinationFile);
+      file.transferTo(new File(UPLOAD_DIR + filename));
 
       return new ResponseEntity<>(ApiResponse.success(null), HttpStatus.OK);
     } catch (IIOException e) {
@@ -138,8 +136,7 @@ public class ScreenshotController {
   @GetMapping("/all")
   public ResponseEntity<ApiResponse<List<ScreenshotDto>>> getAllScreenshots(
       @RequestParam("email") String email) {
-    File uploadDir = new File(UPLOAD_DIR);
-    File[] files = uploadDir.listFiles();
+    File[] files = new File(UPLOAD_DIR).listFiles();
 
     if (files == null) {
       return new ResponseEntity<>(ApiResponse.error("can't load screenshots"),
@@ -278,8 +275,7 @@ public class ScreenshotController {
             HttpStatus.NOT_ACCEPTABLE);
       }
 
-      File file = new File(UPLOAD_DIR + filename);
-      if (!file.exists()) {
+      if (!new File(UPLOAD_DIR + filename).exists()) {
         return new ResponseEntity<>(ApiResponse.error(filename + "doesn't exist"),
             HttpStatus.NOT_FOUND);
       }
@@ -325,9 +321,8 @@ public class ScreenshotController {
     // 파일 삭제
     for (int i = 0; i < fileList.size(); i++) {
       String filename = fileList.get(i);
-      File file = new File(UPLOAD_DIR + filename);
 
-      if (!file.delete()) {
+      if (!new File(UPLOAD_DIR + filename).delete()) {
         for (int j = 0; j < i; j++) {
           boolean isBackupSuccessful = false;
           File backupFile = backupFiles.get(j);
