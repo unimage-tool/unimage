@@ -79,14 +79,13 @@ public class ScreenshotController {
       return ApiResponse.error(filename + " already exists", HttpStatus.CONFLICT);
     }
 
+    File uploadDir = new File(UPLOAD_DIR);
+    if (!uploadDir.exists()) {
+      uploadDir.mkdirs();
+    }
+
     try {
-      File uploadDir = new File(UPLOAD_DIR);
-      if (!uploadDir.exists()) {
-        uploadDir.mkdirs();
-      }
-
       file.transferTo(new File(UPLOAD_DIR + filename));
-
       return ApiResponse.success();
     } catch (IIOException e) {
       e.printStackTrace();
