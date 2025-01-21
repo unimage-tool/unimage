@@ -11,7 +11,8 @@ import java.nio.channels.InterruptedByTimeoutException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.LocalDate;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -145,9 +146,8 @@ public class ScreenshotController {
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
         .filter(File::isFile)
-        .map(file -> new ScreenshotDto("fileName", "C:/Server/Unimage~~",
-            LocalDate.of(2024, 9, 23)
-        ))
+        .map(file -> new ScreenshotDto(file.getName(), file.getPath(),
+            Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate()))
         .sorted(Comparator.comparing((ScreenshotDto screenshot) -> screenshot.date).reversed())
         .collect(Collectors.toList());
     return new ResponseEntity<>(ApiResponse.success(screenshotList), HttpStatus.OK);
@@ -176,11 +176,8 @@ public class ScreenshotController {
           HttpStatus.NOT_FOUND);
     }
 
-    ScreenshotDto screenshotDto = new ScreenshotDto(
-        file.getName(),
-        file.getAbsolutePath(),
-        LocalDate.of(2024, 9, 23)
-    );
+    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName(), file.getAbsolutePath(),
+        Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate());
     return new ResponseEntity<>(ApiResponse.success(screenshotDto), HttpStatus.OK);
   }
 
