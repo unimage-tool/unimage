@@ -146,7 +146,7 @@ public class ScreenshotController {
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
         .filter(File::isFile)
-        .map(file -> new ScreenshotDto(file.getName(), file.getPath(),
+        .map(file -> new ScreenshotDto(file.getName(),
             Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate()))
         .sorted(Comparator.comparing((ScreenshotDto screenshot) -> screenshot.date).reversed())
         .collect(Collectors.toList());
@@ -176,7 +176,7 @@ public class ScreenshotController {
           HttpStatus.NOT_FOUND);
     }
 
-    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName(), file.getAbsolutePath(),
+    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName(),
         Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate());
     return new ResponseEntity<>(ApiResponse.success(screenshotDto), HttpStatus.OK);
   }
@@ -188,22 +188,6 @@ public class ScreenshotController {
    * @param filename 경로를 생성할 파일명
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 파일의 저장 경로 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
-  @GetMapping("/{filename}")
-  public ResponseEntity<ApiResponse<String>> getScreenshotLink(
-      @RequestParam("email") String email,
-      @PathVariable String filename) {
-    if (filename == null || filename.isEmpty()) {
-      return new ResponseEntity<>(ApiResponse.error("filename needs at least 1 character"),
-          HttpStatus.NOT_ACCEPTABLE);
-    }
-
-    File file = new File(UPLOAD_DIR + filename);
-    if (!file.exists()) {
-      return new ResponseEntity<>(ApiResponse.error(filename + " does not exist"),
-          HttpStatus.NOT_FOUND);
-    }
-    return new ResponseEntity<>(ApiResponse.success(file.getAbsolutePath()), HttpStatus.OK);
-  }
 
   /**
    * 지정된 파일의 파일명을 수정합니다.
