@@ -43,7 +43,6 @@ import org.springframework.web.multipart.MultipartFile;
  *     <li>전달된 한 장의 스크린샷 저장.</li>
  *     <li>저장된 모든 스크린샷 조회.</li>
  *     <li>선택한 하나의 스크린샷 조회.</li>
- *     <li>스크린샷이 저장된 경로 조회.</li>
  *     <li>스크린샷의 파일명 수정.</li>
  *     <li>리스트 단위로 선택된 스크린샷 삭제, 실패 시 자동 복원.</li>
  * </ul>
@@ -180,14 +179,6 @@ public class ScreenshotController {
         Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate());
     return new ResponseEntity<>(ApiResponse.success(screenshotDto), HttpStatus.OK);
   }
-
-  /**
-   * 파일이 저장된 경로를 불러옵니다.
-   *
-   * @param email    사용자 고유 식별자
-   * @param filename 경로를 생성할 파일명
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 파일의 저장 경로 반환, 실패 시 상태 코드와 에러 메시지 반환
-   */
 
   /**
    * 지정된 파일의 파일명을 수정합니다.
