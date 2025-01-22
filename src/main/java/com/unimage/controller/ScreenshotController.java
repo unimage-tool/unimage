@@ -233,11 +233,12 @@ public class ScreenshotController {
     }
 
     // 파일 백업
-    List<File> backupFiles = new ArrayList<>();
     File backupDir = new File(BACKUP_DIR);
     if (!backupDir.exists()) {
       backupDir.mkdirs();
     }
+
+    List<File> backupFiles = new ArrayList<>();
     for (String filename : fileList) {
       File originalFile = new File(UPLOAD_DIR + filename);
       File backupFile = new File(BACKUP_DIR + filename);
@@ -264,24 +265,25 @@ public class ScreenshotController {
       }
     }
     if (backupFiles.size() != fileList.size()) {
+      deleteBackupFiles(backupFiles);
       return ApiResponse.error("Error occurred making backup file. Try it later",
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // 파일 삭제
+    // 파일 제거 실패 시, 삭제했던 파일 복구 후 복구 성공한 백업 파일은 제거
     for (int i = 0; i < fileList.size(); i++) {
       String filename = fileList.get(i);
 
       if (!new File(UPLOAD_DIR + filename).delete()) {
         for (int j = 0; j < i; j++) {
-          boolean isBackupSuccessful = false;
+          boolean isCopySuccessful = false;
           File backupFile = backupFiles.get(j);
           File originalFile = new File(UPLOAD_DIR + backupFile.getName());
 
           try {
             Files.copy(backupFile.toPath(), originalFile.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
-            isBackupSuccessful = true;
+            isCopySuccessful = true;
           } catch (UnsupportedOperationException e) {
             e.printStackTrace();
             logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}", filename,
@@ -299,7 +301,7 @@ public class ScreenshotController {
             logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}", filename,
                 e.getMessage());
           } finally {
-            if (backupFile.exists() && isBackupSuccessful) {
+            if (backupFile.exists() && isCopySuccessful) {
               if (!backupFile.delete()) {
                 logger.error("Failed to delete restored file in backup: {}", backupFile.getName());
               }
@@ -312,18 +314,16 @@ public class ScreenshotController {
       }
     }
 
-    // 백업 파일 및 디렉토리 삭제
-    if (backupDir.exists()) {
-      for (File backupFile : backupFiles) {
-        if (!backupFile.delete()) {
-          logger.error("Failed to delete backup file: {}", backupFile.getName());
-        }
-      }
-    }
-    if (!backupDir.delete()) {
-      logger.error("Failed to delete backup Directory: {}", backupDir.getAbsolutePath());
-    }
+    deleteBackupFiles(backupFiles);
 
     return ApiResponse.success();
+  }
+
+  private void deleteBackupFiles(List<File> backupFiles) {
+    for (File backupFile : backupFiles) {
+      if (!backupFile.delete()) {
+        logger.error("Failed to delete backup file: {}", backupFile.getName());
+      }
+    }
   }
 }
