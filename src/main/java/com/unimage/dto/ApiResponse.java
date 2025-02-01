@@ -57,4 +57,8 @@ public class ApiResponse<T> extends ResponseEntity<T> {
   public static <T> ApiResponse<T> error(String message, HttpStatus status) {
     return new ApiResponse<>(null, message, status);
   }
+
+  public static <T> ApiResponse<T> error(T body, String message, HttpStatus status) {
+    return new ApiResponse<>(body, message, status);
+  }
 }

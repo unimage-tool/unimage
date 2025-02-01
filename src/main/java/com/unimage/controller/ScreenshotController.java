@@ -206,7 +206,7 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
   @DeleteMapping("/delete")
-  public ApiResponse<Void> deleteScreenshot(
+  public ApiResponse<List<String>> deleteScreenshot(
       @RequestParam("email") String email,
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
@@ -265,58 +265,71 @@ public class ScreenshotController {
     }
 
     // 파일 제거 실패 시, 삭제했던 파일 복구 후 복구 성공한 백업 파일은 제거
-    for (int i = 0; i < fileList.size(); i++) {
-      String filename = fileList.get(i);
-
-      if (!new File(UPLOAD_DIR + filename).delete()) {
-        for (int j = 0; j < i; j++) {
-          boolean isCopySuccessful = false;
-          File backupFile = backupFiles.get(j);
-          File originalFile = new File(UPLOAD_DIR + backupFile.getName());
-
-          try {
-            Files.copy(backupFile.toPath(), originalFile.toPath(),
-                StandardCopyOption.REPLACE_EXISTING);
-            isCopySuccessful = true;
-          } catch (UnsupportedOperationException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}", filename,
-                originalFile.getName(), e.getMessage());
-          } catch (SocketException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Network error. Exception: {}", filename,
-                e.getMessage());
-          } catch (InterruptedByTimeoutException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Timeout. Exception: {}", filename,
-                e.getMessage());
-          } catch (IOException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}", filename,
-                e.getMessage());
-          } finally {
-            if (backupFile.exists() && isCopySuccessful) {
-              if (!backupFile.delete()) {
-                logger.error("Failed to delete restored file in backup: {}", backupFile.getName());
-              }
-            }
-          }
-        }
-        logger.error("Failed to delete file: {}", filename);
-        return ApiResponse.error("Error occurred deleting file. Try it later",
-            HttpStatus.INTERNAL_SERVER_ERROR);
+    List<String> deleteResults = new ArrayList<>();
+    boolean isDeleteSuccessful = true;
+    for (String filename : fileList) {
+      if (new File(UPLOAD_DIR + filename).delete()) {
+        deleteResults.add(filename + "deletion available");
+      } else {
+        deleteResults.add(filename + "deletion not available");
+        isDeleteSuccessful = false;
       }
     }
 
-    deleteBackupFiles(backupFiles);
+    if (isDeleteSuccessful) {
+      deleteBackupFiles(backupFiles);
+      return ApiResponse.success();
+    } else {
+      for (File backupFile : backupFiles) {
+        File file = new File(UPLOAD_DIR + backupFile.getName());
+        boolean isCopySuccessful = false;
 
-    return ApiResponse.success();
+        if (file.exists()) {
+          if (!backupFile.delete()) {
+            logger.error(
+                "Failed to delete backup file: {}. This file already exists at {}",
+                backupFile.getName(), UPLOAD_DIR);
+          }
+        } else {
+          try {
+            Files.copy(backupFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            isCopySuccessful = true;
+          } catch (UnsupportedOperationException e) {
+            e.printStackTrace();
+            logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}",
+                backupFile.getName(), backupFile.getName(), e.getMessage());
+          } catch (SocketException e) {
+            e.printStackTrace();
+            logger.error("Restore failed file: {}. Reason: Network error. Exception: {}",
+                backupFile.getName(), e.getMessage());
+          } catch (InterruptedByTimeoutException e) {
+            e.printStackTrace();
+            logger.error("Restore failed file: {}. Reason: Timeout. Exception: {}",
+                backupFile.getName(), e.getMessage());
+          } catch (IOException e) {
+            e.printStackTrace();
+            logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}",
+                backupFile.getName(), e.getMessage());
+          } finally {
+            if (isCopySuccessful && !backupFile.delete()) {
+              logger.error(
+                  "Failed to delete backup file: {}. This file already restored at {}",
+                  backupFile.getName(), UPLOAD_DIR);
+            }
+          }
+        }
+      }
+    }
+
+    return ApiResponse.error(deleteResults, "some files are using so can't be deleted",
+        HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   private void deleteBackupFiles(List<File> backupFiles) {
     for (File backupFile : backupFiles) {
       if (!backupFile.delete()) {
-        logger.error("Failed to delete backup file: {}", backupFile.getName());
+        logger.error("Failed to delete backup file while deleting all backup files: {}",
+            backupFile.getName());
       }
     }
   }
