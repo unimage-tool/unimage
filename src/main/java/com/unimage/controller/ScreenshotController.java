@@ -11,11 +11,8 @@ import java.nio.channels.InterruptedByTimeoutException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -134,9 +131,7 @@ public class ScreenshotController {
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
         .filter(File::isFile)
-        .map(file -> new ScreenshotDto(file.getName(),
-            Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate()))
-        .sorted(Comparator.comparing((ScreenshotDto screenshot) -> screenshot.date).reversed())
+        .map(file -> new ScreenshotDto(file.getName()))
         .collect(Collectors.toList());
     return ApiResponse.success(screenshotList);
   }
@@ -162,8 +157,7 @@ public class ScreenshotController {
       return ApiResponse.error(filename + " does not exist", HttpStatus.NOT_FOUND);
     }
 
-    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName(),
-        Instant.ofEpochMilli(file.lastModified()).atZone(ZoneId.systemDefault()).toLocalDate());
+    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName());
     return ApiResponse.success(screenshotDto);
   }
 
