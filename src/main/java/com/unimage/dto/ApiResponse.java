@@ -58,6 +58,15 @@ public class ApiResponse<T> extends ResponseEntity<T> {
     return new ApiResponse<>(null, message, status);
   }
 
+  /**
+   * 실패 응답을 생성하는 static 메서드
+   *
+   * @param <T>     응답 데이터 유형
+   * @param body    응답 데이터
+   * @param message 실패 메시지
+   * @param status  응답 상태코드
+   * @return 실패 응답 객체
+   */
   public static <T> ApiResponse<T> error(T body, String message, HttpStatus status) {
     return new ApiResponse<>(body, message, status);
   }

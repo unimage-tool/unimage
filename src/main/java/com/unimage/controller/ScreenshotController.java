@@ -264,7 +264,7 @@ public class ScreenshotController {
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // 파일 제거 실패 시, 삭제했던 파일 복구 후 복구 성공한 백업 파일은 제거
+    // 파일 제거 성공여부를 기록하여 실패한 경우 있을 시, 각 파일의 삭제 가능 여부 반환에 사용
     List<String> deleteResults = new ArrayList<>();
     boolean isDeleteSuccessful = true;
     for (String filename : fileList) {
@@ -276,6 +276,7 @@ public class ScreenshotController {
       }
     }
 
+    // 리스트 단위 삭제 성공 시 백업 파일들 삭제, 실패 시 복원 진행 및 복원 실패 로그에 기록
     if (isDeleteSuccessful) {
       deleteBackupFiles(backupFiles);
       return ApiResponse.success();
