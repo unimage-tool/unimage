@@ -65,7 +65,7 @@ public class ScreenshotController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "filename", required = false) String filename) {
     if (file == null || file.isEmpty()) {
-      return ApiResponse.error("screenshot file is empty", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("Screenshot file is empty", HttpStatus.NOT_ACCEPTABLE);
     }
 
     if (filename == null || filename.isEmpty()) {
@@ -86,30 +86,30 @@ public class ScreenshotController {
       return ApiResponse.success();
     } catch (IIOException e) {
       e.printStackTrace();
-      return ApiResponse.error("file is damaged or not supported", HttpStatus.BAD_REQUEST);
+      return ApiResponse.error("File is damaged or not supported", HttpStatus.BAD_REQUEST);
     } catch (ClosedChannelException e) {
       e.printStackTrace();
-      return ApiResponse.error("file stream is closed", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ApiResponse.error("File stream is closed", HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (FileSystemException e) {
       e.printStackTrace();
-      return ApiResponse.error("file needs permission or is locked",
+      return ApiResponse.error("File needs permission or is locked",
           HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (SocketException e) {
       e.printStackTrace();
-      return ApiResponse.error("network error occurred", HttpStatus.SERVICE_UNAVAILABLE);
+      return ApiResponse.error("Network error occurred", HttpStatus.SERVICE_UNAVAILABLE);
     } catch (InterruptedByTimeoutException e) {
       e.printStackTrace();
-      return ApiResponse.error("timeout occurred", HttpStatus.GATEWAY_TIMEOUT);
+      return ApiResponse.error("Timeout occurred", HttpStatus.GATEWAY_TIMEOUT);
     } catch (InterruptedIOException e) {
       e.printStackTrace();
-      return ApiResponse.error("interrupt occurred: try it again", HttpStatus.SERVICE_UNAVAILABLE);
+      return ApiResponse.error("Interrupt occurred: try it again", HttpStatus.SERVICE_UNAVAILABLE);
     } catch (IOException e) {
       e.printStackTrace();
-      return ApiResponse.error("unexpected error " + e.getMessage(),
+      return ApiResponse.error("Unexpected error " + e.getMessage(),
           HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (IllegalStateException e) {
       e.printStackTrace();
-      return ApiResponse.error("file already stored", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ApiResponse.error("File already stored", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -126,7 +126,7 @@ public class ScreenshotController {
     File[] files = new File(UPLOAD_DIR).listFiles();
 
     if (files == null) {
-      return ApiResponse.error("can't load screenshots", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ApiResponse.error("Can't load screenshots", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
@@ -149,7 +149,7 @@ public class ScreenshotController {
       @RequestParam("email") String email,
       @PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("filename needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
     }
 
     File file = new File(UPLOAD_DIR + filename);
@@ -175,11 +175,12 @@ public class ScreenshotController {
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("filename needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
     }
 
     if (newFilename == null || newFilename.isEmpty()) {
-      return ApiResponse.error("newFilename needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("New file name needs at least 1 character",
+          HttpStatus.NOT_ACCEPTABLE);
     }
 
     File originalFile = new File(UPLOAD_DIR + filename);
@@ -210,14 +211,14 @@ public class ScreenshotController {
       @RequestParam("email") String email,
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
-      return ApiResponse.error("fileList needs at least 1 file", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File list needs at least 1 file", HttpStatus.NOT_ACCEPTABLE);
     }
 
     // 리스트 내의 파일 이름의 유효성 검사
     for (int i = 0; i < fileList.size(); i++) {
       String filename = fileList.get(i);
       if (filename == null || filename.isEmpty()) {
-        return ApiResponse.error("index " + i + " data in fileList needs at least 1 character",
+        return ApiResponse.error("Index " + i + " data in file list needs at least 1 character",
             HttpStatus.NOT_ACCEPTABLE);
       }
 
@@ -242,25 +243,25 @@ public class ScreenshotController {
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
         e.printStackTrace();
-        logger.error("Backup failed file: {}. Reason: {} read-only. Exception: {}", filename,
-            backupFile.getName(), e.getMessage());
+        logger.error("Back up failed file: {}. Reason: {} read-only. Exception: {}", filename,
+            filename, e.getMessage());
       } catch (SocketException e) {
         e.printStackTrace();
-        logger.error("Backup failed file: {}. Reason: Network error. Exception: {}", filename,
+        logger.error("Back up failed file: {}. Reason: Network error. Exception: {}", filename,
             e.getMessage());
       } catch (InterruptedByTimeoutException e) {
         e.printStackTrace();
-        logger.error("Backup failed file: {}. Reason: Timeout. Exception: {}", filename,
+        logger.error("Back up failed file: {}. Reason: Timeout. Exception: {}", filename,
             e.getMessage());
       } catch (IOException e) {
         e.printStackTrace();
-        logger.error("Backup failed file: {}. Reason: Unexpected. Exception: {}", filename,
+        logger.error("Back up failed file: {}. Reason: Unexpected. Exception: {}", filename,
             e.getMessage());
       }
     }
     if (backupFiles.size() != fileList.size()) {
       deleteBackupFiles(backupFiles);
-      return ApiResponse.error("Error occurred making backup file. Try it later",
+      return ApiResponse.error("Error occurred making back up file. Try it later",
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -288,7 +289,7 @@ public class ScreenshotController {
         if (file.exists()) {
           if (!backupFile.delete()) {
             logger.error(
-                "Failed to delete backup file: {}. This file already exists at {}",
+                "Failed to delete back up file: {}. This file already exists at {}",
                 backupFile.getName(), UPLOAD_DIR);
           }
         } else {
@@ -314,7 +315,7 @@ public class ScreenshotController {
           } finally {
             if (isCopySuccessful && !backupFile.delete()) {
               logger.error(
-                  "Failed to delete backup file: {}. This file already restored at {}",
+                  "Failed to delete back up file: {}. This file already restored at {}",
                   backupFile.getName(), UPLOAD_DIR);
             }
           }
@@ -322,14 +323,14 @@ public class ScreenshotController {
       }
     }
 
-    return ApiResponse.error(deleteResults, "some files are using so can't be deleted",
+    return ApiResponse.error(deleteResults, "Some files are using so can't be deleted",
         HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   private void deleteBackupFiles(List<File> backupFiles) {
     for (File backupFile : backupFiles) {
       if (!backupFile.delete()) {
-        logger.error("Failed to delete backup file while deleting all backup files: {}",
+        logger.error("Failed to delete back up file while deleting all back up files: {}",
             backupFile.getName());
       }
     }
