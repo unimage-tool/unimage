@@ -28,8 +28,9 @@ public class ApiResponse<T> extends ResponseEntity<T> {
   /**
    * 반환될 데이터와 함께 성공적인 응답을 생성하는 static 메서드
    *
-   * @param <T>  응답 데이터 유형
-   * @param body 응답 데이터
+   * @param <T>    응답 데이터 유형
+   * @param body   응답 데이터
+   * @param status 응답 상태코드
    * @return 성공적인 응답 객체
    */
   public static <T> ApiResponse<T> success(T body, HttpStatus status) {
@@ -39,7 +40,8 @@ public class ApiResponse<T> extends ResponseEntity<T> {
   /**
    * 반환될 데이터 없이 성공적인 응답을 생성하는 static 메서드
    *
-   * @param <T> 응답 데이터 유형
+   * @param <T>    응답 데이터 유형
+   * @param status 응답 상태코드
    * @return 성공적인 응답 객체
    */
   public static <T> ApiResponse<T> success(HttpStatus status) {
