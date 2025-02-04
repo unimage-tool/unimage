@@ -60,7 +60,7 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
   @PostMapping("/upload")
-  public ApiResponse<Void> uploadScreenshot(
+  public ApiResponse<ScreenshotDto> uploadScreenshot(
       @RequestParam("email") String email,
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "filename", required = false) String filename) {
@@ -83,7 +83,7 @@ public class ScreenshotController {
 
     try {
       file.transferTo(new File(UPLOAD_DIR + filename));
-      return ApiResponse.success();
+      return ApiResponse.success(new ScreenshotDto(filename), HttpStatus.CREATED);
     } catch (IIOException e) {
       e.printStackTrace();
       return ApiResponse.error("File is damaged or not supported", HttpStatus.BAD_REQUEST);
@@ -133,7 +133,7 @@ public class ScreenshotController {
         .filter(File::isFile)
         .map(file -> new ScreenshotDto(file.getName()))
         .collect(Collectors.toList());
-    return ApiResponse.success(screenshotList);
+    return ApiResponse.success(screenshotList, HttpStatus.OK);
   }
 
   /**
@@ -156,7 +156,7 @@ public class ScreenshotController {
       return ApiResponse.error(filename + " does not exist", HttpStatus.NOT_FOUND);
     }
 
-    return ApiResponse.success(new ScreenshotDto(filename));
+    return ApiResponse.success(new ScreenshotDto(filename), HttpStatus.OK);
   }
 
   /**
@@ -168,7 +168,7 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
   @PutMapping("/modify")
-  public ApiResponse<Void> modifyScreenshot(
+  public ApiResponse<ScreenshotDto> modifyScreenshot(
       @RequestParam("email") String email,
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
@@ -191,7 +191,7 @@ public class ScreenshotController {
     }
 
     if (originalFile.renameTo(newFile)) {
-      return ApiResponse.success();
+      return ApiResponse.success(new ScreenshotDto(newFilename), HttpStatus.OK);
     } else {
       return ApiResponse.error(filename + " is locked", HttpStatus.FORBIDDEN);
     }
@@ -278,7 +278,7 @@ public class ScreenshotController {
     // 리스트 단위 삭제 성공 시 백업 파일들 삭제, 실패 시 복원 진행 및 복원 실패 로그에 기록
     if (isDeleteSuccessful) {
       deleteBackupFiles(backupFiles);
-      return ApiResponse.success();
+      return ApiResponse.success(HttpStatus.NO_CONTENT);
     } else {
       for (File backupFile : backupFiles) {
         File file = new File(UPLOAD_DIR + backupFile.getName());
