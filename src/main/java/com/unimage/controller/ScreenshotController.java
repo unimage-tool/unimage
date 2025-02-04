@@ -64,7 +64,7 @@ public class ScreenshotController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "filename", required = false) String filename) {
     if (file == null || file.isEmpty()) {
-      return ApiResponse.error("Screenshot file is empty", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("Screenshot file is empty", HttpStatus.BAD_REQUEST);
     }
 
     if (filename == null || filename.isEmpty()) {
@@ -143,7 +143,7 @@ public class ScreenshotController {
   @GetMapping("/{filename}")
   public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File name needs at least 1 character", HttpStatus.BAD_REQUEST);
     }
 
     if (!new File(UPLOAD_DIR + filename).exists()) {
@@ -166,12 +166,11 @@ public class ScreenshotController {
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File name needs at least 1 character", HttpStatus.BAD_REQUEST);
     }
 
     if (newFilename == null || newFilename.isEmpty()) {
-      return ApiResponse.error("New file name needs at least 1 character",
-          HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("New file name needs at least 1 character", HttpStatus.BAD_REQUEST);
     }
 
     File originalFile = new File(UPLOAD_DIR + filename);
@@ -186,7 +185,7 @@ public class ScreenshotController {
     if (originalFile.renameTo(newFile)) {
       return ApiResponse.success(new ScreenshotDto(newFilename), HttpStatus.OK);
     } else {
-      return ApiResponse.error(filename + " is locked", HttpStatus.FORBIDDEN);
+      return ApiResponse.error(filename + " is locked", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -201,7 +200,7 @@ public class ScreenshotController {
   public ApiResponse<List<String>> deleteScreenshot(
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
-      return ApiResponse.error("File list needs at least 1 file", HttpStatus.NOT_ACCEPTABLE);
+      return ApiResponse.error("File list needs at least 1 file", HttpStatus.BAD_REQUEST);
     }
 
     // 리스트 내의 파일 이름의 유효성 검사
@@ -209,7 +208,7 @@ public class ScreenshotController {
       String filename = fileList.get(i);
       if (filename == null || filename.isEmpty()) {
         return ApiResponse.error("Index " + i + " data in file list needs at least 1 character",
-            HttpStatus.NOT_ACCEPTABLE);
+            HttpStatus.BAD_REQUEST);
       }
 
       if (!new File(UPLOAD_DIR + filename).exists()) {
