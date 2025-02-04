@@ -61,7 +61,6 @@ public class ScreenshotController {
    */
   @PostMapping("/upload")
   public ApiResponse<ScreenshotDto> uploadScreenshot(
-      @RequestParam("email") String email,
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "filename", required = false) String filename) {
     if (file == null || file.isEmpty()) {
@@ -121,8 +120,7 @@ public class ScreenshotController {
    * 반환 {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
    */
   @GetMapping("/all")
-  public ApiResponse<List<ScreenshotDto>> getAllScreenshots(
-      @RequestParam("email") String email) {
+  public ApiResponse<List<ScreenshotDto>> getAllScreenshots() {
     File[] files = new File(UPLOAD_DIR).listFiles();
 
     if (files == null) {
@@ -145,9 +143,7 @@ public class ScreenshotController {
    * {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
    */
   @GetMapping("/{filename}")
-  public ApiResponse<ScreenshotDto> getScreenshot(
-      @RequestParam("email") String email,
-      @PathVariable String filename) {
+  public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
       return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
     }
@@ -169,7 +165,6 @@ public class ScreenshotController {
    */
   @PutMapping("/modify")
   public ApiResponse<ScreenshotDto> modifyScreenshot(
-      @RequestParam("email") String email,
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
     if (filename == null || filename.isEmpty()) {
@@ -206,7 +201,6 @@ public class ScreenshotController {
    */
   @DeleteMapping("/delete")
   public ApiResponse<List<String>> deleteScreenshot(
-      @RequestParam("email") String email,
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
       return ApiResponse.error("File list needs at least 1 file", HttpStatus.NOT_ACCEPTABLE);
