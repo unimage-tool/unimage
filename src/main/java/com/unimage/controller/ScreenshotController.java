@@ -54,10 +54,10 @@ public class ScreenshotController {
   /**
    * 전달된 스크린샷 파일을 지정된 파일명으로 저장합니다. 파일명이 null로 전달될 경우 UUID를 생성하여 저장합니다.
    *
-   * @param email    사용자 고유 식별자
    * @param file     저장할 스크린샷 파일
    * @param filename 저장할 파일명 (null일 경우 UUID 부여)
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * @return {@link ApiResponse}를 통해 성공 시 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러
+   * 메시지 반환, {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @PostMapping("/upload")
   public ApiResponse<ScreenshotDto> uploadScreenshot(
@@ -115,9 +115,8 @@ public class ScreenshotController {
   /**
    * 저장된 파일들을 날짜순으로 전부 불러옵니다.
    *
-   * @param email 사용자 고유 식별자
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link List<ScreenshotDto>} 반환, 실패 시 상태코드와 에러 메시지
-   * 반환 {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
+   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link List<ScreenshotDto>} 반환, 실패 시 상태 코드와 에러 메시지
+   * 반환 {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @GetMapping("/all")
   public ApiResponse<List<ScreenshotDto>> getAllScreenshots() {
@@ -137,10 +136,9 @@ public class ScreenshotController {
   /**
    * 지정된 파일 정보를 불러옵니다.
    *
-   * @param email    사용자 고유 식별자
    * @param filename 반환할 파일의 파일명
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
-   * {@link ScreenshotDto}는 스크린샷의 파일명, 생성일자를 포함
+   * {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @GetMapping("/{filename}")
   public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
@@ -158,10 +156,10 @@ public class ScreenshotController {
   /**
    * 지정된 파일의 파일명을 수정합니다.
    *
-   * @param email       사용자 고유 식별자
    * @param filename    기존 파일명
    * @param newFilename 새 파일명
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @PutMapping("/modify")
   public ApiResponse<ScreenshotDto> modifyScreenshot(
@@ -195,9 +193,9 @@ public class ScreenshotController {
   /**
    * 전달된 파일 리스트를 삭제합니다. 삭제 중 오류 발생 시 모든 파일을 복원합니다.
    *
-   * @param email    사용자 고유 식별자
    * @param fileList 삭제할 파일명을 담고있는 리스트
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * @return {@link ApiResponse}를 통해 성공 시 204 NO_CONTENT 반환, 실패 시 상태 코드, 에러 메시지,
+   * {@link List<String>} 반환 {@link List<String>}는 각 파일들의 삭제 결과를 포함
    */
   @DeleteMapping("/delete")
   public ApiResponse<List<String>> deleteScreenshot(
