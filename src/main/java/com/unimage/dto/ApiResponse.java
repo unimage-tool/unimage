@@ -32,8 +32,8 @@ public class ApiResponse<T> extends ResponseEntity<T> {
    * @param body 응답 데이터
    * @return 성공적인 응답 객체
    */
-  public static <T> ApiResponse<T> success(T body) {
-    return new ApiResponse<>(body, null, HttpStatus.OK);
+  public static <T> ApiResponse<T> success(T body, HttpStatus status) {
+    return new ApiResponse<>(body, null, status);
   }
 
   /**
@@ -42,8 +42,8 @@ public class ApiResponse<T> extends ResponseEntity<T> {
    * @param <T> 응답 데이터 유형
    * @return 성공적인 응답 객체
    */
-  public static <T> ApiResponse<T> success() {
-    return new ApiResponse<>(null, null, HttpStatus.OK);
+  public static <T> ApiResponse<T> success(HttpStatus status) {
+    return new ApiResponse<>(null, null, status);
   }
 
   /**
