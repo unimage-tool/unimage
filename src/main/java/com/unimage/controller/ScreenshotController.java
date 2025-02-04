@@ -152,13 +152,11 @@ public class ScreenshotController {
       return ApiResponse.error("File name needs at least 1 character", HttpStatus.NOT_ACCEPTABLE);
     }
 
-    File file = new File(UPLOAD_DIR + filename);
-    if (!file.exists()) {
+    if (!new File(UPLOAD_DIR + filename).exists()) {
       return ApiResponse.error(filename + " does not exist", HttpStatus.NOT_FOUND);
     }
 
-    ScreenshotDto screenshotDto = new ScreenshotDto(file.getName());
-    return ApiResponse.success(screenshotDto);
+    return ApiResponse.success(new ScreenshotDto(filename));
   }
 
   /**
