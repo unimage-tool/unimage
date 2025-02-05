@@ -260,9 +260,9 @@ public class ScreenshotController {
     boolean isDeleteSuccessful = true;
     for (String filename : fileList) {
       if (new File(UPLOAD_DIR + filename).delete()) {
-        deleteResults.add(filename + "deletion available");
+        deleteResults.add(filename + " deletion available");
       } else {
-        deleteResults.add(filename + "deletion not available");
+        deleteResults.add(filename + " deletion not available");
         isDeleteSuccessful = false;
       }
     }
