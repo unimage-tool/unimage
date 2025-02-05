@@ -227,24 +227,32 @@ public class ScreenshotController {
         e.printStackTrace();
         logger.error("Back up failed file: {}. Reason: {} read-only. Exception: {}", filename,
             filename, e.getMessage());
+        deleteBackupFiles(backupFiles);
+        return ApiResponse.error(
+            "Error occurred making back up file. Original file was read-only. Try it later",
+            HttpStatus.INTERNAL_SERVER_ERROR);
       } catch (SocketException e) {
         e.printStackTrace();
         logger.error("Back up failed file: {}. Reason: Network error. Exception: {}", filename,
             e.getMessage());
+        deleteBackupFiles(backupFiles);
+        return ApiResponse.error("Network error occurred making back up file. Try it later",
+            HttpStatus.SERVICE_UNAVAILABLE);
       } catch (InterruptedByTimeoutException e) {
         e.printStackTrace();
         logger.error("Back up failed file: {}. Reason: Timeout. Exception: {}", filename,
             e.getMessage());
+        deleteBackupFiles(backupFiles);
+        return ApiResponse.error("Timeout error occurred making back up file. Try it later",
+            HttpStatus.GATEWAY_TIMEOUT);
       } catch (IOException e) {
         e.printStackTrace();
         logger.error("Back up failed file: {}. Reason: Unexpected. Exception: {}", filename,
             e.getMessage());
+        deleteBackupFiles(backupFiles);
+        return ApiResponse.error("Unexpected Error occurred making back up file. Try it later",
+            HttpStatus.INTERNAL_SERVER_ERROR);
       }
-    }
-    if (backupFiles.size() != fileList.size()) {
-      deleteBackupFiles(backupFiles);
-      return ApiResponse.error("Error occurred making back up file. Try it later",
-          HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 파일 제거 성공여부를 기록하여 실패한 경우 있을 시, 각 파일의 삭제 가능 여부 반환에 사용
