@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * 스크린샷 파일의 저장, 조회, 수정, 삭제와 같은 작업을 처리하는 API를 제공합니다.
  *
- * <p>주요 기능:
+ * <p>주요 기능:</p>
  *
  * <ul>
  *     <li>전달된 한 장의 스크린샷 저장.</li>
