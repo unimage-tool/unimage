@@ -60,8 +60,15 @@ public class ScreenshotController {
       return ApiResponse.error("Screenshot file is empty", HttpStatus.BAD_REQUEST);
     }
 
-    if (filename == null || filename.isEmpty()) {
+    String imageType = filename.substring(filename.lastIndexOf(".") + 1);
+    if (!imageType.equals("jpg") && !imageType.equals("jpeg")) {
+      return ApiResponse.error("Only 'jpg' or 'jpeg' image type supported",
+          HttpStatus.BAD_REQUEST);
+    }
+
+    if (filename.isEmpty()) {
       filename = UUID.randomUUID().toString();
+      filename += ".jpeg";
     }
 
     if (new File(UPLOAD_DIR + filename).exists()) {
