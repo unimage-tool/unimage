@@ -2,6 +2,7 @@ package com.unimage.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -15,13 +16,15 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/screenshot/upload").permitAll()
-            .requestMatchers("/screenshot/all").permitAll()
-            .requestMatchers("/screenshot/image").permitAll()
-            .requestMatchers("/screenshot/modify").permitAll()
-            .requestMatchers("/screenshot/delete").permitAll()
+            .requestMatchers("/screenshot/upload").authenticated()
+            .requestMatchers("/screenshot/all").authenticated()
+            .requestMatchers("/screenshot/image").authenticated()
+            .requestMatchers("/screenshot/modify").authenticated()
+            .requestMatchers("/screenshot/delete").authenticated()
+            .requestMatchers("/").authenticated()
             .anyRequest().denyAll()
-        );
+        )
+        .oauth2Login(Customizer.withDefaults());
 
     return http.build();
   }
