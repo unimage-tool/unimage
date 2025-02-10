@@ -201,7 +201,7 @@ public class ScreenshotController {
       }
 
       if (!new File(UPLOAD_DIR + filename).exists()) {
-        return ApiResponse.error(filename + "doesn't exist", HttpStatus.NOT_FOUND);
+        return ApiResponse.error(filename + " doesn't exist", HttpStatus.NOT_FOUND);
       }
     }
 
