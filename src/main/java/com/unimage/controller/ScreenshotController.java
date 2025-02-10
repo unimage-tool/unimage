@@ -45,10 +45,9 @@ public class ScreenshotController {
   private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
   /**
-   * 전달된 스크린샷 파일을 지정된 파일명으로 저장합니다. 파일명이 null로 전달될 경우 UUID를 생성하여 저장합니다.
+   * 전달된 스크린샷 파일을 저장합니다.
    *
    * @param file     저장할 스크린샷 파일
-   * @param filename 저장할 파일명 (null일 경우 UUID 부여)
    * @return {@link ApiResponse}를 통해 성공 시 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러
    * 메시지 반환
    */
