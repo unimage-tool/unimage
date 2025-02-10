@@ -50,7 +50,7 @@ public class ScreenshotController {
    * @param file     저장할 스크린샷 파일
    * @param filename 저장할 파일명 (null일 경우 UUID 부여)
    * @return {@link ApiResponse}를 통해 성공 시 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러
-   * 메시지 반환, {@link ScreenshotDto}는 스크린샷의 파일명을 포함
+   * 메시지 반환
    */
   @PostMapping("/upload")
   public ApiResponse<ScreenshotDto> uploadScreenshot(
@@ -109,7 +109,7 @@ public class ScreenshotController {
    * 저장된 파일들을 날짜순으로 전부 불러옵니다.
    *
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link List<ScreenshotDto>} 반환, 실패 시 상태 코드와 에러 메시지
-   * 반환 {@link ScreenshotDto}는 스크린샷의 파일명을 포함
+   * 반환
    */
   @GetMapping("/all")
   public ApiResponse<List<ScreenshotDto>> getAllScreenshots() {
@@ -131,7 +131,6 @@ public class ScreenshotController {
    *
    * @param filename 반환할 파일의 파일명
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
-   * {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @GetMapping("/{filename}")
   public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
@@ -152,7 +151,6 @@ public class ScreenshotController {
    * @param filename    기존 파일명
    * @param newFilename 새 파일명
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
-   * {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @PutMapping("/modify")
   public ApiResponse<ScreenshotDto> modifyScreenshot(
@@ -187,7 +185,7 @@ public class ScreenshotController {
    *
    * @param fileList 삭제할 파일명을 담고있는 리스트
    * @return {@link ApiResponse}를 통해 성공 시 204 NO_CONTENT 반환, 실패 시 상태 코드, 에러 메시지,
-   * {@link List<String>} 반환 {@link List<String>}는 각 파일들의 삭제 결과를 포함
+   * {@link List<String>} 반환, {@link List<String>}는 각 파일들의 삭제 결과를 포함
    */
   @DeleteMapping("/delete")
   public ApiResponse<List<String>> deleteScreenshot(
