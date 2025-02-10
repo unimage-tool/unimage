@@ -2,6 +2,7 @@ package com.unimage.controller;
 
 import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
+import com.unimage.exception.BackUpFileException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -206,49 +207,14 @@ public class ScreenshotController {
     }
 
     // 파일 백업
-    File backupDir = new File(BACKUP_DIR);
-    if (!backupDir.exists()) {
-      backupDir.mkdirs();
-    }
-
     List<File> backupFiles = new ArrayList<>();
-    for (String filename : fileList) {
-      File originalFile = new File(UPLOAD_DIR + filename);
-      File backupFile = new File(BACKUP_DIR + filename);
-
-      try {
-        Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        backupFiles.add(backupFile);
-      } catch (UnsupportedOperationException e) {
-        e.printStackTrace();
-        logger.error("Back up failed file: {}. Reason: {} read-only. Exception: {}", filename,
-            filename, e.getMessage());
-        deleteBackupFiles(backupFiles);
-        return ApiResponse.error(
-            "Error occurred making back up file. Original file was read-only. Try it later",
-            HttpStatus.INTERNAL_SERVER_ERROR);
-      } catch (SocketException e) {
-        e.printStackTrace();
-        logger.error("Back up failed file: {}. Reason: Network error. Exception: {}", filename,
-            e.getMessage());
-        deleteBackupFiles(backupFiles);
-        return ApiResponse.error("Network error occurred making back up file. Try it later",
-            HttpStatus.SERVICE_UNAVAILABLE);
-      } catch (InterruptedByTimeoutException e) {
-        e.printStackTrace();
-        logger.error("Back up failed file: {}. Reason: Timeout. Exception: {}", filename,
-            e.getMessage());
-        deleteBackupFiles(backupFiles);
-        return ApiResponse.error("Timeout error occurred making back up file. Try it later",
-            HttpStatus.GATEWAY_TIMEOUT);
-      } catch (IOException e) {
-        e.printStackTrace();
-        logger.error("Back up failed file: {}. Reason: Unexpected. Exception: {}", filename,
-            e.getMessage());
-        deleteBackupFiles(backupFiles);
-        return ApiResponse.error("Unexpected Error occurred making back up file. Try it later",
-            HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+    try {
+      createBackUpFiles(fileList, backupFiles);
+    } catch (BackUpFileException e) {
+      e.printStackTrace();
+      deleteBackupFiles(backupFiles);
+      return ApiResponse.error("Error occurred while creating backup files. Try again later.",
+          HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // 파일 제거 성공여부를 기록하여 실패한 경우 있을 시, 각 파일의 삭제 가능 여부 반환에 사용
@@ -311,6 +277,31 @@ public class ScreenshotController {
 
     return ApiResponse.error(deleteResults, "Some files are using so can't be deleted",
         HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  private void createBackUpFiles(List<String> fileList, List<File> backupFiles) throws BackUpFileException {
+    File backupDir = new File(BACKUP_DIR);
+    if (!backupDir.exists()) {
+      backupDir.mkdirs();
+    }
+
+    for (String filename : fileList) {
+      File originalFile = new File(UPLOAD_DIR + filename);
+      File backupFile = new File(BACKUP_DIR + filename);
+
+      try {
+        Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        backupFiles.add(backupFile);
+      } catch (UnsupportedOperationException e) {
+        throw new BackUpFileException("Read-only file error during back up: " + filename, e);
+      } catch (SocketException e) {
+        throw new BackUpFileException("Network error during back up: " + filename, e);
+      } catch (InterruptedByTimeoutException e) {
+        throw new BackUpFileException("Timeout error during backup: " + filename, e);
+      } catch (IOException e) {
+        throw new BackUpFileException("Unexpected I/O error during back up: " + filename, e);
+      }
+    }
   }
 
   private void deleteBackupFiles(List<File> backupFiles) {
