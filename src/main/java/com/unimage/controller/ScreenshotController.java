@@ -53,13 +53,12 @@ public class ScreenshotController {
    * 메시지 반환
    */
   @PostMapping("/upload")
-  public ApiResponse<ScreenshotDto> uploadScreenshot(
-      @RequestParam("file") MultipartFile file,
-      @RequestParam(value = "filename", required = false) String filename) {
+  public ApiResponse<ScreenshotDto> uploadScreenshot(@RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       return ApiResponse.error("Screenshot file is empty", HttpStatus.BAD_REQUEST);
     }
 
+    String filename = file.getOriginalFilename();
     if (filename == null || filename.isEmpty()) {
       filename = UUID.randomUUID().toString();
     }
