@@ -2,7 +2,7 @@ package com.unimage.controller;
 
 import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
-import com.unimage.exception.BackUpFileException;
+import com.unimage.exception.CreateBackUpFileException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -48,7 +48,7 @@ public class ScreenshotController {
   /**
    * 전달된 스크린샷 파일을 저장합니다.
    *
-   * @param file     저장할 스크린샷 파일
+   * @param file 저장할 스크린샷 파일
    * @return {@link ApiResponse}를 통해 성공 시 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러
    * 메시지 반환
    */
@@ -187,7 +187,7 @@ public class ScreenshotController {
    * {@link List<String>} 반환, {@link List<String>}는 각 파일들의 삭제 결과를 포함
    */
   @DeleteMapping("/delete")
-  public ApiResponse<List<String>> deleteScreenshot(
+  public ApiResponse<Void> deleteScreenshot(
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
       return ApiResponse.error("File list needs at least 1 file", HttpStatus.BAD_REQUEST);
@@ -207,79 +207,53 @@ public class ScreenshotController {
     }
 
     // 파일 백업
-    List<File> backupFiles = new ArrayList<>();
+    List<File> backUpFiles = new ArrayList<>();
     try {
-      createBackUpFiles(fileList, backupFiles);
-    } catch (BackUpFileException e) {
+      createBackUpFiles(fileList, backUpFiles);
+    } catch (CreateBackUpFileException e) {
       e.printStackTrace();
-      deleteBackupFiles(backupFiles);
-      return ApiResponse.error("Error occurred while creating backup files. Try again later.",
+      deleteBackupFiles(backUpFiles);
+      return ApiResponse.error("Error occurred while creating back up files. Try again later.",
           HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // 파일 제거 성공여부를 기록하여 실패한 경우 있을 시, 각 파일의 삭제 가능 여부 반환에 사용
-    List<String> deleteResults = new ArrayList<>();
-    boolean isDeleteSuccessful = true;
-    for (String filename : fileList) {
-      if (new File(UPLOAD_DIR + filename).delete()) {
-        deleteResults.add(filename + " deletion available");
-      } else {
-        deleteResults.add(filename + " deletion not available");
-        isDeleteSuccessful = false;
+    // 파일 제거 실패 시, 삭제 파일 복구 후 백업 파일 제거
+    for (int i = 0; i < fileList.size(); i++) {
+      String filename = fileList.get(i);
+      if (!new File(UPLOAD_DIR + filename).delete()) {
+        restoreDeletedFiles(i, backUpFiles);
+        deleteBackupFiles(backUpFiles);
+        return ApiResponse.error(
+            "Failed to delete " + filename + ". Has no permission now. Try again later.",
+            HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
 
-    // 리스트 단위 삭제 성공 시 백업 파일들 삭제, 실패 시 복원 진행 및 복원 실패 로그에 기록
-    if (isDeleteSuccessful) {
-      deleteBackupFiles(backupFiles);
-      return ApiResponse.success(HttpStatus.NO_CONTENT);
-    } else {
-      for (File backupFile : backupFiles) {
-        File file = new File(UPLOAD_DIR + backupFile.getName());
-        boolean isCopySuccessful = false;
-
-        if (file.exists()) {
-          if (!backupFile.delete()) {
-            logger.error(
-                "Failed to delete back up file: {}. This file already exists at {}",
-                backupFile.getName(), UPLOAD_DIR);
-          }
-        } else {
-          try {
-            Files.copy(backupFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            isCopySuccessful = true;
-          } catch (UnsupportedOperationException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: {} read-only. Exception: {}",
-                backupFile.getName(), backupFile.getName(), e.getMessage());
-          } catch (SocketException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Network error. Exception: {}",
-                backupFile.getName(), e.getMessage());
-          } catch (InterruptedByTimeoutException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Timeout. Exception: {}",
-                backupFile.getName(), e.getMessage());
-          } catch (IOException e) {
-            e.printStackTrace();
-            logger.error("Restore failed file: {}. Reason: Unexpected. Exception: {}",
-                backupFile.getName(), e.getMessage());
-          } finally {
-            if (isCopySuccessful && !backupFile.delete()) {
-              logger.error(
-                  "Failed to delete back up file: {}. This file already restored at {}",
-                  backupFile.getName(), UPLOAD_DIR);
-            }
-          }
-        }
-      }
-    }
-
-    return ApiResponse.error(deleteResults, "Some files are using so can't be deleted",
-        HttpStatus.INTERNAL_SERVER_ERROR);
+    deleteBackupFiles(backUpFiles);
+    return ApiResponse.success(HttpStatus.NO_CONTENT);
   }
 
-  private void createBackUpFiles(List<String> fileList, List<File> backupFiles) throws BackUpFileException {
+  private void restoreDeletedFiles(int failedPos, List<File> backupFiles) {
+    for (int i = 0; i < failedPos; i++) {
+      File backUpFile = backupFiles.get(i);
+      File file = new File(UPLOAD_DIR + backUpFile.getName());
+
+      try {
+        Files.copy(backUpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      } catch (UnsupportedOperationException e) {
+        e.printStackTrace();
+      } catch (SocketException e) {
+        e.printStackTrace();
+      } catch (InterruptedByTimeoutException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private void createBackUpFiles(List<String> fileList, List<File> backupFiles)
+      throws CreateBackUpFileException {
     File backupDir = new File(BACKUP_DIR);
     if (!backupDir.exists()) {
       backupDir.mkdirs();
@@ -293,13 +267,13 @@ public class ScreenshotController {
         Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
-        throw new BackUpFileException("Read-only file error during back up: " + filename, e);
+        throw new CreateBackUpFileException("Read-only file error during back up: " + filename, e);
       } catch (SocketException e) {
-        throw new BackUpFileException("Network error during back up: " + filename, e);
+        throw new CreateBackUpFileException("Network error during back up: " + filename, e);
       } catch (InterruptedByTimeoutException e) {
-        throw new BackUpFileException("Timeout error during backup: " + filename, e);
+        throw new CreateBackUpFileException("Timeout error during backup: " + filename, e);
       } catch (IOException e) {
-        throw new BackUpFileException("Unexpected I/O error during back up: " + filename, e);
+        throw new CreateBackUpFileException("Unexpected I/O error during back up: " + filename, e);
       }
     }
   }
