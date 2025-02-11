@@ -1,6 +1,5 @@
 package com.unimage.controller;
 
-import com.unimage.dto.ApiResponse;
 import com.unimage.dto.ScreenshotDto;
 import com.unimage.exception.CreateBackUpFileException;
 import java.io.File;
@@ -12,15 +11,13 @@ import java.nio.channels.InterruptedByTimeoutException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.imageio.IIOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,9 +50,11 @@ public class ScreenshotController {
    * 메시지 반환
    */
   @PostMapping("/upload")
-  public ApiResponse<ScreenshotDto> uploadScreenshot(@RequestParam("file") MultipartFile file) {
+  public ResponseEntity<Map<String, Object>> uploadScreenshot(
+      @RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return ApiResponse.error("Screenshot file is empty", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "Screenshot file is empty"));
     }
 
     String filename = file.getOriginalFilename();
@@ -64,7 +63,8 @@ public class ScreenshotController {
     }
 
     if (new File(UPLOAD_DIR + filename).exists()) {
-      return ApiResponse.error(filename + " already exists", HttpStatus.CONFLICT);
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(Map.of("message", filename + " already exists"));
     }
 
     File uploadDir = new File(UPLOAD_DIR);
@@ -74,33 +74,40 @@ public class ScreenshotController {
 
     try {
       file.transferTo(new File(UPLOAD_DIR + filename));
-      return ApiResponse.success(new ScreenshotDto(filename), HttpStatus.CREATED);
+      return ResponseEntity.status(HttpStatus.CREATED)
+          .body(Map.of("data", new ScreenshotDto(filename)));
     } catch (IIOException e) {
       e.printStackTrace();
-      return ApiResponse.error("File is damaged or not supported", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "File is damaged of not supported"));
     } catch (ClosedChannelException e) {
       e.printStackTrace();
-      return ApiResponse.error("File stream is closed", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "File stream is closed"));
     } catch (FileSystemException e) {
       e.printStackTrace();
-      return ApiResponse.error("File needs permission or is locked",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "File needs permission or is locked"));
     } catch (SocketException e) {
       e.printStackTrace();
-      return ApiResponse.error("Network error occurred", HttpStatus.SERVICE_UNAVAILABLE);
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body(Map.of("message", "Network error occurred"));
     } catch (InterruptedByTimeoutException e) {
       e.printStackTrace();
-      return ApiResponse.error("Timeout occurred", HttpStatus.GATEWAY_TIMEOUT);
+      return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+          .body(Map.of("message", "Timeout occurred"));
     } catch (InterruptedIOException e) {
       e.printStackTrace();
-      return ApiResponse.error("Interrupt occurred: try it again", HttpStatus.SERVICE_UNAVAILABLE);
+      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+          .body(Map.of("message", "Interrupt occurred: try it again"));
     } catch (IOException e) {
       e.printStackTrace();
-      return ApiResponse.error("Unexpected error " + e.getMessage(),
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Unexpected error " + e.getMessage()));
     } catch (IllegalStateException e) {
       e.printStackTrace();
-      return ApiResponse.error("File already stored", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "File already stored"));
     }
   }
 
@@ -111,18 +118,19 @@ public class ScreenshotController {
    * 반환
    */
   @GetMapping("/all")
-  public ApiResponse<List<ScreenshotDto>> getAllScreenshots() {
+  public ResponseEntity<Map<String, Object>> getAllScreenshots() {
     File[] files = new File(UPLOAD_DIR).listFiles();
 
     if (files == null) {
-      return ApiResponse.error("Can't load screenshots", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Can't load screenshots"));
     }
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files)
         .filter(File::isFile)
         .map(file -> new ScreenshotDto(file.getName()))
         .collect(Collectors.toList());
-    return ApiResponse.success(screenshotList, HttpStatus.OK);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of("data", screenshotList));
   }
 
   /**
@@ -132,16 +140,18 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
   @GetMapping("/{filename}")
-  public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
+  public ResponseEntity<Map<String, Object>> getScreenshot(@PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("File name needs at least 1 character", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "File name needs at least 1 character"));
     }
 
     if (!new File(UPLOAD_DIR + filename).exists()) {
-      return ApiResponse.error(filename + " does not exist", HttpStatus.NOT_FOUND);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(Map.of("message", filename + " does not exist"));
     }
 
-    return ApiResponse.success(new ScreenshotDto(filename), HttpStatus.OK);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of("data", new ScreenshotDto(filename)));
   }
 
   /**
@@ -152,30 +162,36 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
    */
   @PutMapping("/modify")
-  public ApiResponse<ScreenshotDto> modifyScreenshot(
+  public ResponseEntity<Map<String, Object>> modifyScreenshot(
       @RequestParam("filename") String filename,
       @RequestParam("newFilename") String newFilename) {
     if (filename == null || filename.isEmpty()) {
-      return ApiResponse.error("File name needs at least 1 character", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "File name needs at least 1 character"));
     }
 
     if (newFilename == null || newFilename.isEmpty()) {
-      return ApiResponse.error("New file name needs at least 1 character", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "New file name needs at least 1 character"));
     }
 
     File originalFile = new File(UPLOAD_DIR + filename);
     File newFile = new File(UPLOAD_DIR + newFilename);
     if (!originalFile.exists()) {
-      return ApiResponse.error(filename + " does not exist", HttpStatus.NOT_FOUND);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(Map.of("message", filename + " does not exist"));
     }
     if (newFile.exists()) {
-      return ApiResponse.error(newFilename + " already exists", HttpStatus.CONFLICT);
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(Map.of("message", newFilename + " already exists"));
     }
 
     if (originalFile.renameTo(newFile)) {
-      return ApiResponse.success(new ScreenshotDto(newFilename), HttpStatus.OK);
+      return ResponseEntity.status(HttpStatus.OK)
+          .body(Map.of("data", new ScreenshotDto(newFilename)));
     } else {
-      return ApiResponse.error(filename + " is locked", HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", filename + " is locked"));
     }
   }
 
@@ -187,22 +203,24 @@ public class ScreenshotController {
    * {@link List<String>} 반환, {@link List<String>}는 각 파일들의 삭제 결과를 포함
    */
   @DeleteMapping("/delete")
-  public ApiResponse<Void> deleteScreenshot(
+  public ResponseEntity<Map<String, String>> deleteScreenshot(
       @RequestParam("fileList") List<String> fileList) {
     if (fileList == null || fileList.isEmpty()) {
-      return ApiResponse.error("File list needs at least 1 file", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "File list needs at least 1 file"));
     }
 
     // 리스트 내의 파일 이름의 유효성 검사
     for (int i = 0; i < fileList.size(); i++) {
       String filename = fileList.get(i);
       if (filename == null || filename.isEmpty()) {
-        return ApiResponse.error("Index " + i + " data in file list needs at least 1 character",
-            HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            Map.of("message", "Index " + i + " data in file list needs at least 1 character"));
       }
 
       if (!new File(UPLOAD_DIR + filename).exists()) {
-        return ApiResponse.error(filename + " doesn't exist", HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(Map.of("message", filename + " doesn't exist"));
       }
     }
 
@@ -213,8 +231,8 @@ public class ScreenshotController {
     } catch (CreateBackUpFileException e) {
       e.printStackTrace();
       deleteBackupFiles(backUpFiles);
-      return ApiResponse.error("Error occurred while creating back up files. Try again later.",
-          HttpStatus.INTERNAL_SERVER_ERROR);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(Map.of("message", "Error occurred while creating back up files. Try again later."));
     }
 
     // 파일 제거 실패 시, 삭제 파일 복구 후 백업 파일 제거
@@ -223,14 +241,13 @@ public class ScreenshotController {
       if (!new File(UPLOAD_DIR + filename).delete()) {
         restoreDeletedFiles(i, backUpFiles);
         deleteBackupFiles(backUpFiles);
-        return ApiResponse.error(
-            "Failed to delete " + filename + ". Has no permission now. Try again later.",
-            HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message",
+            "Failed to delete " + filename + ". Has no permission now. Try again later."));
       }
     }
 
     deleteBackupFiles(backUpFiles);
-    return ApiResponse.success(HttpStatus.NO_CONTENT);
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
   }
 
   private void restoreDeletedFiles(int failedPos, List<File> backupFiles) {
