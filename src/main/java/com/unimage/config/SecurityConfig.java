@@ -20,7 +20,6 @@ public class SecurityConfig {
             .requestMatchers("/screenshot/image").authenticated()
             .requestMatchers("/screenshot/modify").authenticated()
             .requestMatchers("/screenshot/delete").authenticated()
-            .requestMatchers("/").authenticated()
             .anyRequest().denyAll()
         )
         .oauth2Login(oauth -> oauth.successHandler((request, response, authentication) -> {
