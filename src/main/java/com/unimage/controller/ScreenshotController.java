@@ -46,8 +46,7 @@ public class ScreenshotController {
    * 전달된 스크린샷 파일을 저장합니다.
    *
    * @param file 저장할 스크린샷 파일
-   * @return {@link ApiResponse}를 통해 성공 시 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러
-   * 메시지 반환
+   * @return 성공 시 응답으로 201 CREATED와 생성된 {@link ScreenshotDto} 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @PostMapping("/upload")
   public ResponseEntity<Map<String, Object>> uploadScreenshot(
@@ -112,10 +111,9 @@ public class ScreenshotController {
   }
 
   /**
-   * 저장된 파일들을 날짜순으로 전부 불러옵니다.
+   * 저장된 모든 파일들을 불러옵니다.
    *
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link List<ScreenshotDto>} 반환, 실패 시 상태 코드와 에러 메시지
-   * 반환
+   * @return 성공 시 응답으로 200 OK와 {@link List<ScreenshotDto>} 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @GetMapping("/all")
   public ResponseEntity<Map<String, Object>> getAllScreenshots() {
@@ -137,7 +135,7 @@ public class ScreenshotController {
    * 지정된 파일 정보를 불러옵니다.
    *
    * @param filename 반환할 파일의 파일명
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * @return 성공 시 응답으로 200 OK와 {@link ScreenshotDto} 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @GetMapping("/{filename}")
   public ResponseEntity<Map<String, Object>> getScreenshot(@PathVariable String filename) {
@@ -159,7 +157,7 @@ public class ScreenshotController {
    *
    * @param filename    기존 파일명
    * @param newFilename 새 파일명
-   * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
+   * @return 성공 시 응답으로 200 OK와 {@link ScreenshotDto} 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @PutMapping("/modify")
   public ResponseEntity<Map<String, Object>> modifyScreenshot(
@@ -196,11 +194,10 @@ public class ScreenshotController {
   }
 
   /**
-   * 전달된 파일 리스트를 삭제합니다. 삭제 중 오류 발생 시 모든 파일을 복원합니다.
+   * 전달된 파일 리스트를 삭제합니다. 삭제 중 오류 발생 시 삭제된 파일을 복원합니다.
    *
    * @param fileList 삭제할 파일명을 담고있는 리스트
-   * @return {@link ApiResponse}를 통해 성공 시 204 NO_CONTENT 반환, 실패 시 상태 코드, 에러 메시지,
-   * {@link List<String>} 반환, {@link List<String>}는 각 파일들의 삭제 결과를 포함
+   * @return 성공 시 응답으로 204 NO_CONTENT 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @DeleteMapping("/delete")
   public ResponseEntity<Map<String, String>> deleteScreenshot(
