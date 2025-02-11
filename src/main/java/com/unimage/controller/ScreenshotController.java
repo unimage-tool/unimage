@@ -53,22 +53,20 @@ public class ScreenshotController {
    * 메시지 반환, {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
   @PostMapping("/upload")
-  public ApiResponse<ScreenshotDto> uploadScreenshot(
-      @RequestParam("file") MultipartFile file,
-      @RequestParam(value = "filename", required = false) String filename) {
+  public ApiResponse<ScreenshotDto> uploadScreenshot(@RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
       return ApiResponse.error("Screenshot file is empty", HttpStatus.BAD_REQUEST);
     }
 
-    String imageType = filename.substring(filename.lastIndexOf(".") + 1);
-    if (!imageType.equals("jpg") && !imageType.equals("jpeg")) {
-      return ApiResponse.error("Only 'jpg' or 'jpeg' image type supported",
-          HttpStatus.BAD_REQUEST);
-    }
-
-    if (filename.isEmpty()) {
+    String filename = file.getOriginalFilename();
+    if (filename == null || filename.isEmpty()) {
       filename = UUID.randomUUID().toString();
       filename += ".jpeg";
+    }
+
+    String imageType = filename.substring(filename.lastIndexOf(".") + 1);
+    if (!imageType.equals("jpg") && !imageType.equals("jpeg")) {
+      return ApiResponse.error("Only 'jpg' or 'jpeg' image type supported", HttpStatus.BAD_REQUEST);
     }
 
     if (new File(UPLOAD_DIR + filename).exists()) {
