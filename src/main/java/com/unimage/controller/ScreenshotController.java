@@ -240,10 +240,9 @@ public class ScreenshotController {
     }
 
     // 파일 제거 실패 시, 삭제 파일 복구 후 백업 파일 제거
-    for (int i = 0; i < fileList.size(); i++) {
-      String filename = fileList.get(i);
+    for (String filename : fileList) {
       if (!new File(UPLOAD_DIR + filename).delete()) {
-        restoreDeletedFiles(i, backUpFiles);
+        restoreDeletedFiles(filename, backUpFiles);
         deleteBackupFiles(backUpFiles);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message",
             "Failed to delete " + filename + ": file in use or insufficient permissions"));
@@ -254,13 +253,11 @@ public class ScreenshotController {
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
   }
 
-  private void restoreDeletedFiles(int failedPos, List<File> backupFiles) {
-    for (int i = 0; i < failedPos; i++) {
-      File backUpFile = backupFiles.get(i);
-      File file = new File(UPLOAD_DIR + backUpFile.getName());
-
+  private void restoreDeletedFiles(String filename, List<File> backUpFiles) {
+    for (File backUpFile : backUpFiles) {
       try {
-        Files.copy(backUpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(backUpFile.toPath(), new File(UPLOAD_DIR + backUpFile.getName()).toPath(),
+            StandardCopyOption.REPLACE_EXISTING);
       } catch (Exception e) {
         e.printStackTrace();
       }
