@@ -255,6 +255,9 @@ public class ScreenshotController {
 
   private void restoreDeletedFiles(String filename, List<File> backUpFiles) {
     for (File backUpFile : backUpFiles) {
+      if (backUpFile.getName().equals(filename)) {
+        break;
+      }
       try {
         Files.copy(backUpFile.toPath(), new File(UPLOAD_DIR + backUpFile.getName()).toPath(),
             StandardCopyOption.REPLACE_EXISTING);
