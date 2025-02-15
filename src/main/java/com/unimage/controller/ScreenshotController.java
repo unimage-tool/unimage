@@ -133,8 +133,8 @@ public class ScreenshotController {
    * @return {@link ApiResponse}를 통해 성공 시 200 OK와 {@link ScreenshotDto} 반환, 실패 시 상태 코드와 에러 메시지 반환
    * {@link ScreenshotDto}는 스크린샷의 파일명을 포함
    */
-  @GetMapping("/image")
-  public ApiResponse<ScreenshotDto> getScreenshot(@RequestParam String filename) {
+  @GetMapping("/{filename}")
+  public ApiResponse<ScreenshotDto> getScreenshot(@PathVariable String filename) {
     if (filename == null || filename.isEmpty()) {
       return ApiResponse.error("File name needs at least 1 character", HttpStatus.BAD_REQUEST);
     }
