@@ -181,11 +181,12 @@ public class ScreenshotController {
     }
 
     File originalFile = new File(UPLOAD_DIR + filename);
-    File newFile = new File(UPLOAD_DIR + newFilename);
     if (!originalFile.exists()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(Map.of("message", filename + " does not exist"));
     }
+
+    File newFile = new File(UPLOAD_DIR + newFilename);
     if (newFile.exists()) {
       return ResponseEntity.status(HttpStatus.CONFLICT)
           .body(Map.of("message", newFilename + " already exists"));
