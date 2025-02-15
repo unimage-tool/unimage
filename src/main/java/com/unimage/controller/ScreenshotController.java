@@ -236,7 +236,7 @@ public class ScreenshotController {
       e.printStackTrace();
       deleteBackupFiles(backUpFiles);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("message", "Error occurred while creating back up files. Try again later."));
+          .body(Map.of("message", "Error occurred while creating back up files"));
     }
 
     // 파일 제거 실패 시, 삭제 파일 복구 후 백업 파일 제거
@@ -246,7 +246,7 @@ public class ScreenshotController {
         restoreDeletedFiles(i, backUpFiles);
         deleteBackupFiles(backUpFiles);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message",
-            "Failed to delete " + filename + ". Has no permission now. Try again later."));
+            "Failed to delete " + filename + ": file in use or insufficient permissions"));
       }
     }
 
@@ -261,13 +261,7 @@ public class ScreenshotController {
 
       try {
         Files.copy(backUpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-      } catch (UnsupportedOperationException e) {
-        e.printStackTrace();
-      } catch (SocketException e) {
-        e.printStackTrace();
-      } catch (InterruptedByTimeoutException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
