@@ -59,6 +59,12 @@ public class ScreenshotController {
     String filename = file.getOriginalFilename();
     if (filename == null || filename.isEmpty()) {
       filename = UUID.randomUUID().toString();
+      filename += ".jpeg";
+    }
+
+    String imageType = filename.substring(filename.lastIndexOf(".") + 1);
+    if (!imageType.equals("jpg") && !imageType.equals("jpeg")) {
+      return ApiResponse.error("Only 'jpg' or 'jpeg' image type supported", HttpStatus.BAD_REQUEST);
     }
 
     if (new File(UPLOAD_DIR + filename).exists()) {
