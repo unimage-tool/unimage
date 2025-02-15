@@ -13,7 +13,7 @@
     <resource url="http://www.springframework.org/schema/context" location="$PROJECT_DIR$" />
     <resource url="http://www.springframework.org/schema/context/spring-context.xsd" location="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="corretto-17" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="corretto-17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

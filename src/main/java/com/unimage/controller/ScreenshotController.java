@@ -64,7 +64,8 @@ public class ScreenshotController {
 
     String imageType = filename.substring(filename.lastIndexOf(".") + 1);
     if (!imageType.equals("jpg") && !imageType.equals("jpeg")) {
-      return ApiResponse.error("Only 'jpg' or 'jpeg' image type supported", HttpStatus.BAD_REQUEST);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(Map.of("message", "Only 'jpg' or 'jpeg' image type supported"));
     }
 
     if (new File(UPLOAD_DIR + filename).exists()) {
