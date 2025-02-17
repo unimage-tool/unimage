@@ -14,8 +14,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.imageio.IIOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +36,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/screenshot")
 public class ScreenshotController {
 
-  private static final Logger logger = LoggerFactory.getLogger(ScreenshotController.class);
   private static final String UPLOAD_DIR = "C:/Server/Unimage/screenshot/";
   private static final String BACKUP_DIR = UPLOAD_DIR + "backup/";
 
@@ -297,8 +294,8 @@ public class ScreenshotController {
   private void deleteBackupFiles(List<File> backupFiles) {
     for (File backupFile : backupFiles) {
       if (!backupFile.delete()) {
-        logger.error("Failed to delete back up file while deleting all back up files: {}",
-            backupFile.getName());
+        System.out.println("Failed to delete back up file while deleting all back up files: {}"
+            + backupFile.getName());
       }
     }
   }
