@@ -278,24 +278,13 @@ public class ScreenshotController {
         Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
-        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE,
-            "Error: Unable to back up " + filename + " because it is read-only.\n"
-                + "Solution: Check " + filename
-                + " has write permissions. Maybe you can use File.setWritable(true).",
-            e);
+        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE, filename, e);
       } catch (SocketException e) {
-        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT,
-            "Error: Unable to back up " + filename + " because network delay occurred.\n"
-                + "Solution: Check your network connection.", e);
+        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT, filename, e);
       } catch (InterruptedByTimeoutException e) {
-        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT,
-            "Error: Unable to back up " + filename + " because of asynchronous task time limit.\n" +
-                "Solution: Consider increasing time limit or optimizing file system performance.",
-            e);
+        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT, filename, e);
       } catch (IOException e) {
-        throw new CreateBackUpFileException(Cause.UNSPECIFIED,
-            "Error: Unable to back up " + filename + " because of unexpected reason.\n"
-                + "Solution: Ask the administrator to look up for the reason.", e);
+        throw new CreateBackUpFileException(Cause.UNSPECIFIED, filename, e);
       }
     }
   }
