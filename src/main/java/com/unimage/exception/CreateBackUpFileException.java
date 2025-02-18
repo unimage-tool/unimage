@@ -2,14 +2,15 @@ package com.unimage.exception;
 
 public class CreateBackUpFileException extends Exception {
 
-  public enum ExceptionType {
-    UNSUPPORTED_OPERATION_EXCEPTION,
-    SOCKET_EXCEPTION,
-    INTERRUPTED_BY_TIMEOUT_EXCEPTION,
-    IO_EXCEPTION
+  public enum Cause {
+    READ_ONLY_BACK_UP_FILE,
+    NETWORK_TIMEOUT,
+    ASYNCHRONOUS_TIMEOUT,
+    UNSPECIFIED
   }
 
-  public CreateBackUpFileException(String message, Throwable cause) {
+  public CreateBackUpFileException(Cause exceptionType, String message, Throwable cause) {
     super(message, cause);
   }
+
 }

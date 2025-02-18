@@ -2,6 +2,7 @@ package com.unimage.controller;
 
 import com.unimage.dto.ScreenshotDto;
 import com.unimage.exception.CreateBackUpFileException;
+import com.unimage.exception.CreateBackUpFileException.Cause;
 import java.io.File;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -12,7 +13,6 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
 import javax.imageio.IIOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -128,10 +128,8 @@ public class ScreenshotController {
           .body(Map.of("message", "Can't load screenshots"));
     }
 
-    List<ScreenshotDto> screenshotList = Arrays.stream(files)
-        .filter(File::isFile)
-        .map(file -> new ScreenshotDto(file.getName()))
-        .collect(Collectors.toList());
+    List<ScreenshotDto> screenshotList = Arrays.stream(files).filter(File::isFile)
+        .map(file -> new ScreenshotDto(file.getName())).toList();
     return ResponseEntity.status(HttpStatus.OK).body(Map.of("data", screenshotList));
   }
 
@@ -280,13 +278,24 @@ public class ScreenshotController {
         Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
-        throw new CreateBackUpFileException("Read-only file error during back up: " + filename, e);
+        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE,
+            "Error: Unable to back up " + filename + " because it is read-only.\n"
+                + "Solution: Check " + filename
+                + " has write permissions. Maybe you can use File.setWritable(true).",
+            e);
       } catch (SocketException e) {
-        throw new CreateBackUpFileException("Network error during back up: " + filename, e);
+        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT,
+            "Error: Unable to back up " + filename + " because network delay occurred.\n"
+                + "Solution: Check your network connection.", e);
       } catch (InterruptedByTimeoutException e) {
-        throw new CreateBackUpFileException("Timeout error during backup: " + filename, e);
+        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT,
+            "Error: Unable to back up " + filename + " because of asynchronous task time limit.\n" +
+                "Solution: Consider increasing time limit or optimizing file system performance.",
+            e);
       } catch (IOException e) {
-        throw new CreateBackUpFileException("Unexpected I/O error during back up: " + filename, e);
+        throw new CreateBackUpFileException(Cause.UNSPECIFIED,
+            "Error: Unable to back up " + filename + " because of unexpected reason.\n"
+                + "Solution: Ask the administrator to look up for the reason.", e);
       }
     }
   }
