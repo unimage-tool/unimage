@@ -200,20 +200,20 @@ public class ScreenshotController {
   /**
    * 전달된 파일 리스트를 삭제합니다. 삭제 중 오류 발생 시 삭제된 파일을 복원합니다.
    *
-   * @param fileList 삭제할 파일명을 담고있는 리스트
+   * @param filenameList 삭제할 파일명을 담고있는 리스트
    * @return 성공 시 응답으로 204 NO_CONTENT 반환, 실패 시 응답으로 상태 코드와 에러 메시지 반환
    */
   @DeleteMapping("/delete")
   public ResponseEntity<Map<String, String>> deleteScreenshot(
-      @RequestParam("fileList") List<String> fileList) {
-    if (fileList == null || fileList.isEmpty()) {
+      @RequestParam("filenameList") List<String> filenameList) {
+    if (filenameList == null || filenameList.isEmpty()) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(Map.of("message", "File list needs at least 1 file"));
     }
 
     // 리스트 내의 파일 이름의 유효성 검사
-    for (int i = 0; i < fileList.size(); i++) {
-      String filename = fileList.get(i);
+    for (int i = 0; i < filenameList.size(); i++) {
+      String filename = filenameList.get(i);
       if (filename == null || filename.isEmpty()) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
             Map.of("message", "Index " + i + " data in file list needs at least 1 character"));
@@ -228,7 +228,7 @@ public class ScreenshotController {
     // 파일 백업
     List<File> backUpFiles = new ArrayList<>();
     try {
-      createBackUpFiles(fileList, backUpFiles);
+      createBackUpFiles(filenameList, backUpFiles);
     } catch (CreateBackUpFileException e) {
       e.printStackTrace();
       deleteBackupFiles(backUpFiles);
@@ -237,7 +237,7 @@ public class ScreenshotController {
     }
 
     // 파일 제거 실패 시, 삭제 파일 복구 후 백업 파일 제거
-    for (String filename : fileList) {
+    for (String filename : filenameList) {
       if (!new File(UPLOAD_DIR + filename).delete()) {
         restoreDeletedFiles(filename, backUpFiles);
         deleteBackupFiles(backUpFiles);
@@ -250,9 +250,9 @@ public class ScreenshotController {
     return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
   }
 
-  private void restoreDeletedFiles(String filename, List<File> backUpFiles) {
+  private void restoreDeletedFiles(String deleteFailedFilename, List<File> backUpFiles) {
     for (File backUpFile : backUpFiles) {
-      if (backUpFile.getName().equals(filename)) {
+      if (backUpFile.getName().equals(deleteFailedFilename)) {
         break;
       }
       try {
@@ -264,14 +264,14 @@ public class ScreenshotController {
     }
   }
 
-  private void createBackUpFiles(List<String> fileList, List<File> backupFiles)
+  private void createBackUpFiles(List<String> filenameList, List<File> backupFiles)
       throws CreateBackUpFileException {
     File backupDir = new File(BACKUP_DIR);
     if (!backupDir.exists()) {
       backupDir.mkdirs();
     }
 
-    for (String filename : fileList) {
+    for (String filename : filenameList) {
       File originalFile = new File(UPLOAD_DIR + filename);
       File backupFile = new File(BACKUP_DIR + filename);
 
