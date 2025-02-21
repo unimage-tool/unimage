@@ -78,7 +78,7 @@ public class ScreenshotController {
     try {
       file.transferTo(new File(UPLOAD_DIR + filename));
       return ResponseEntity.status(HttpStatus.CREATED)
-          .body(Map.of("data", new ScreenshotDto(filename)));
+          .body(Map.of("screenshot", new ScreenshotDto(filename)));
     } catch (IIOException e) {
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -130,7 +130,7 @@ public class ScreenshotController {
 
     List<ScreenshotDto> screenshotList = Arrays.stream(files).filter(File::isFile)
         .map(file -> new ScreenshotDto(file.getName())).toList();
-    return ResponseEntity.status(HttpStatus.OK).body(Map.of("data", screenshotList));
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of("screenshot_list", screenshotList));
   }
 
   /**
@@ -151,7 +151,8 @@ public class ScreenshotController {
           .body(Map.of("message", filename + " does not exist"));
     }
 
-    return ResponseEntity.status(HttpStatus.OK).body(Map.of("data", new ScreenshotDto(filename)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(Map.of("screenshot", new ScreenshotDto(filename)));
   }
 
   /**
@@ -189,7 +190,7 @@ public class ScreenshotController {
 
     if (originalFile.renameTo(newFile)) {
       return ResponseEntity.status(HttpStatus.OK)
-          .body(Map.of("data", new ScreenshotDto(newFilename)));
+          .body(Map.of("screenshot", new ScreenshotDto(newFilename)));
     } else {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("message", filename + " is locked"));
