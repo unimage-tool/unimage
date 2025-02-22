@@ -279,13 +279,33 @@ public class ScreenshotController {
         Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
-        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE, filename, e);
+        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE, filename, e) {
+          @Override
+          public String getMessage() {
+            return getReadOnlyBackUpFile();
+          }
+        };
       } catch (SocketException e) {
-        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT, filename, e);
+        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT, filename, e) {
+          @Override
+          public String getMessage() {
+            return getNetworkTimeout();
+          }
+        };
       } catch (InterruptedByTimeoutException e) {
-        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT, filename, e);
+        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT, filename, e) {
+          @Override
+          public String getMessage() {
+            return getAsynchronousTimeout();
+          }
+        };
       } catch (IOException e) {
-        throw new CreateBackUpFileException(Cause.UNSPECIFIED, filename, e);
+        throw new CreateBackUpFileException(Cause.UNSPECIFIED, filename, e) {
+          @Override
+          public String getMessage() {
+            return getUnspecified();
+          }
+        };
       }
     }
   }
