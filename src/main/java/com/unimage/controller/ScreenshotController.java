@@ -231,6 +231,21 @@ public class ScreenshotController {
       createBackUpFiles(filenameList, backUpFiles);
     } catch (CreateBackUpFileException e) {
       e.printStackTrace();
+      switch (e.cause) {
+        case READ_ONLY_BACK_UP_FILE -> System.out.println(
+            "Error: Unable to back up " + e.filename + " because it is read-only.\n"
+                + "Solution: Contact administrator if it is possible to make " + e.filename
+                + " file writable.");
+        case NETWORK_TIMEOUT -> System.out.println(
+            "Error: Unable to back up " + e.filename + " because network delay occurred.\n"
+                + "Solution: Check your network connection.");
+        case ASYNCHRONOUS_TIMEOUT -> System.out.println(
+            "Error: Unable to back up " + e.filename + " because of asynchronous task time limit.\n"
+                + "Solution: Consider increasing time limit or optimizing file system performance.");
+        case UNSPECIFIED -> System.out.println(
+            "Error: Unable to back up " + e.filename + " because of unexpected reason.\n"
+                + "Solution: Ask the administrator to look up for the reason.");
+      }
       deleteBackupFiles(backUpFiles);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(Map.of("message", "Error occurred while creating back up files"));
@@ -279,33 +294,13 @@ public class ScreenshotController {
         Files.copy(originalFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         backupFiles.add(backupFile);
       } catch (UnsupportedOperationException e) {
-        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE, filename, e) {
-          @Override
-          public String getMessage() {
-            return getReadOnlyBackUpFile();
-          }
-        };
+        throw new CreateBackUpFileException(Cause.READ_ONLY_BACK_UP_FILE, filename, e);
       } catch (SocketException e) {
-        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT, filename, e) {
-          @Override
-          public String getMessage() {
-            return getNetworkTimeout();
-          }
-        };
+        throw new CreateBackUpFileException(Cause.NETWORK_TIMEOUT, filename, e);
       } catch (InterruptedByTimeoutException e) {
-        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT, filename, e) {
-          @Override
-          public String getMessage() {
-            return getAsynchronousTimeout();
-          }
-        };
+        throw new CreateBackUpFileException(Cause.ASYNCHRONOUS_TIMEOUT, filename, e);
       } catch (IOException e) {
-        throw new CreateBackUpFileException(Cause.UNSPECIFIED, filename, e) {
-          @Override
-          public String getMessage() {
-            return getUnspecified();
-          }
-        };
+        throw new CreateBackUpFileException(Cause.UNSPECIFIED, filename, e);
       }
     }
   }
