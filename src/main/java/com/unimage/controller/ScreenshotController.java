@@ -233,18 +233,18 @@ public class ScreenshotController {
       e.printStackTrace();
       switch (e.cause) {
         case READ_ONLY_BACK_UP_FILE -> System.out.println(
-            "Error: Unable to back up " + e.filename + " because it is read-only.\n"
+            "Error: Unable to back up " + e.filename + " because it is read-only\n"
                 + "Solution: Contact administrator if it is possible to make " + e.filename
-                + " file writable.");
+                + " file writable");
         case NETWORK_TIMEOUT -> System.out.println(
-            "Error: Unable to back up " + e.filename + " because network delay occurred.\n"
-                + "Solution: Check your network connection.");
+            "Error: Unable to back up " + e.filename + " because network delay occurred\n"
+                + "Solution: Check your network connection");
         case ASYNCHRONOUS_TIMEOUT -> System.out.println(
-            "Error: Unable to back up " + e.filename + " because of asynchronous task time limit.\n"
-                + "Solution: Consider increasing time limit or optimizing file system performance.");
+            "Error: Unable to back up " + e.filename + " because of asynchronous task time limit\n"
+                + "Solution: Consider increasing time limit or optimizing file system performance");
         case UNSPECIFIED -> System.out.println(
-            "Error: Unable to back up " + e.filename + " because of unexpected reason.\n"
-                + "Solution: Ask the administrator to look up for the reason.");
+            "Error: Unable to back up " + e.filename + " because of unexpected reason\n"
+                + "Solution: Ask the administrator to look up for the reason");
       }
       deleteBackupFiles(backUpFiles);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
